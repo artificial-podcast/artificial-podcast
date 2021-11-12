@@ -1,0 +1,8 @@
+module github.com/artificial-podcast/artificial-podcast
+
+go 1.15
+
+require (
+	cloud.google.com/go v0.90.0
+	google.golang.org/genproto v0.0.0-20210728212813-7823e685a01f
+)
