@@ -6,6 +6,10 @@ import (
 	"os"
 )
 
+const (
+	defaultSynthTimeout = 300 // sec i.e. 5min
+)
+
 type (
 	Voice string
 )
@@ -22,5 +26,13 @@ func SynthesizeSSML(ctx context.Context, source, output string, voice Voice) err
 	}
 	defer out.Close()
 
-	return SynthesizeWithPolly(ctx, string(ssml), out, voice)
+	err = SynthesizeWithPolly(ctx, string(ssml), out, voice, defaultSynthTimeout)
+	if err != nil {
+		out.Close()
+		os.Remove(output) // best effort, don't care about any errors at this point
+
+		return err
+	}
+
+	return nil
 }

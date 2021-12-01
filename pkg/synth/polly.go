@@ -19,6 +19,7 @@ const (
 	defaultInputBucketName  = "artificial-podcast-generate"
 	defaultOutputBucketName = "artificial-podcast-audio"
 	defaultRegion           = "eu-central-1"
+	pollRate                = 20 // seconds
 )
 
 var (
@@ -52,7 +53,10 @@ func (Voice) PollyVoiceId() types.VoiceId {
 	return types.VoiceIdJoanna
 }
 
-func SynthesizeWithPolly(ctx context.Context, ssml string, dst io.Writer, voice Voice) error {
+func SynthesizeWithPolly(ctx context.Context, ssml string, dst io.Writer, voice Voice, timeout int) error {
+	ctx, cancel := context.WithTimeout(ctx, time.Duration(timeout)*time.Second)
+	defer cancel()
+
 	ssmlText := string(ssml)
 	synthesisTaskInput := &polly.StartSpeechSynthesisTaskInput{
 		VoiceId:            voice.PollyVoiceId(),
@@ -89,7 +93,12 @@ func SynthesizeWithPolly(ctx context.Context, ssml string, dst io.Writer, voice 
 		}
 
 		if !found {
-			time.Sleep(time.Second * 30)
+			select {
+			case <-ctx.Done():
+				return ctx.Err()
+			default:
+				time.Sleep(pollRate * time.Second)
+			}
 		}
 	}
 
