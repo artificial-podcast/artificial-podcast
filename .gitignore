@@ -2,7 +2,8 @@ credentials.json
 stuff.md
 *.mp3
 .DS_Store
-
+**/hack/**
+**/_hack/**
 # PYTHON STUFF
 
 # Byte-compiled / optimized / DLL files

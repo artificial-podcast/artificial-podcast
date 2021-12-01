@@ -1,3 +1,4 @@
+<speak>
 Hard by a great forest dwelt a wood-cutter with his wife, who had an
 only child, a little girl three years old.  They were so poor,
 however, that they no longer had daily bread, and did not know how to
@@ -64,3 +65,4 @@ replied.  Then she laid her hand on the girl's heart, and felt how it beat
 and beat, and  saw right well  that she  had disobeyed her  order and  had
 opened the door.  Then she said once again 'are you certain that you  have
 not done it.'
+</speak>
