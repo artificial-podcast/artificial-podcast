@@ -1,12 +1,11 @@
 package main
 
 import (
-	"context"
 	"fmt"
 	"log"
 	"os"
 
-	"github.com/artificial-podcast/artificial-podcast/pkg/synth"
+	"github.com/artificial-podcast/artificial-podcast/pkg/texts"
 )
 
 func main() {
@@ -17,10 +16,8 @@ func main() {
 	input := os.Args[1]
 	output := os.Args[2]
 
-	ctx := context.Background()
-	err := synth.SynthesizeSSML(ctx, input, output, "Joanna")
+	err := texts.MarkupText(input, output)
 	if err != nil {
 		log.Fatal(err)
 	}
-	fmt.Printf("created %s\n", output)
 }

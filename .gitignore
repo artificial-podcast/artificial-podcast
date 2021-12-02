@@ -1,6 +1,7 @@
 credentials.json
 stuff.md
 *.mp3
+*.ssml
 .DS_Store
 **/hack/**
 **/_hack/**
