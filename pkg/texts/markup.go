@@ -134,9 +134,12 @@ func scanParagraph(src *bufio.Scanner, para *strings.Builder) *strings.Builder {
 }
 
 func cleanupLine(txt string) string {
-	l := strings.ReplaceAll(txt, "\n", "")
+	l := strings.ReplaceAll(txt, "\n", " ")
 	l = strings.ReplaceAll(l, "“", "\"")
 	l = strings.ReplaceAll(l, "”", "\"")
+	l = strings.ReplaceAll(l, "´", "'")
+	l = strings.ReplaceAll(l, ",\"", "\",")
+
 	return l
 }
 
@@ -148,5 +151,6 @@ func escapeLine(txt string) string {
 	l = strings.ReplaceAll(l, "'", "&apos;")
 	l = strings.ReplaceAll(l, "<", "&lt;")
 	l = strings.ReplaceAll(l, ">", "&gt;")
+
 	return l
 }
