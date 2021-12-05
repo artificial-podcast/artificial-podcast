@@ -9,6 +9,8 @@ import (
 	"github.com/jdkato/prose/v2"
 )
 
+// see https://docs.aws.amazon.com/polly/latest/dg/what-is.html
+
 var (
 	tags TagStack = make(TagStack, 0) // FIXME THIS MAKES THE ENTIRE THING NOT THREAD-SAFE!!!!
 )
@@ -45,10 +47,16 @@ func MarkupText(source, output string) error {
 }
 
 func Markup(src *bufio.Scanner, ssml *strings.Builder) error {
+	narrator := false
+	paragraph := false
 
 	// wrap the whole text in <speak></speak>
 	tags = tags.Push("speak", ssml)
 	defer tags.Pop(ssml)
+
+	// add breathing sounds
+	//tags = tags.PushWithClosingTag("amazon:auto-breaths volume=\"x-soft\"", "amazon:auto-breaths", ssml)
+	//defer tags.Pop(ssml)
 
 	// each text is a series of paragraphs
 	for src.Scan() {
@@ -56,6 +64,19 @@ func Markup(src *bufio.Scanner, ssml *strings.Builder) error {
 
 		// check for markdown headlines
 		if isHeadline(line, ssml) {
+			src.Scan()
+			continue
+		}
+
+		// check for ++
+		if toggleNarrator(line) {
+			narrator = true
+			paragraph = true
+			continue
+		}
+		// check for ++
+		if forceParagraph(line) {
+			paragraph = true
 			continue
 		}
 
@@ -65,31 +86,76 @@ func Markup(src *bufio.Scanner, ssml *strings.Builder) error {
 		// start a new paragraph
 
 		if len(line) == 0 {
-			pp := scanParagraph(src, &p)
-			if err := markupParagraph(pp, ssml); err != nil {
-				return err
+			pp, lines := scanParagraph(src, &p, 0)
+			if lines == 1 && !paragraph {
+				if err := markupSentence(pp, ssml); err != nil {
+					return err
+				}
+			} else {
+				if err := markupParagraph(pp, narrator, ssml); err != nil {
+					return err
+				}
 			}
 		} else {
 			p.WriteString(line)
-			pp := scanParagraph(src, &p)
-			if err := markupParagraph(pp, ssml); err != nil {
-				return err
+			pp, lines := scanParagraph(src, &p, 1)
+			if lines == 1 && !paragraph {
+				if err := markupSentence(pp, ssml); err != nil {
+					return err
+				}
+			} else {
+				if err := markupParagraph(pp, narrator, ssml); err != nil {
+					return err
+				}
 			}
 		}
+		// reset flags at the end of each paragraph
+		narrator = false
+		paragraph = false
 	}
 	if err := src.Err(); err != nil {
 		return err
 	}
+
 	return nil
 }
 
-func markupParagraph(para *strings.Builder, ssml *strings.Builder) error {
+func markupParagraph(para *strings.Builder, narrator bool, ssml *strings.Builder) error {
 	doc, err := prose.NewDocument(para.String(), prose.WithExtraction(false))
 	if err != nil {
 		return err
 	}
 
 	tags = tags.Push("p", ssml)
+	if narrator {
+		tags = tags.PushWithClosingTag("amazon:domain name=\"news\"", "amazon:domain", ssml)
+	}
+	defer func() {
+		tags = tags.Pop(ssml)
+		if narrator {
+			tags = tags.Pop(ssml)
+		}
+	}()
+
+	for _, sent := range doc.Sentences() {
+		nl := escapeLine(cleanupLine(sent.Text))
+		ssml.WriteString(nl + "\n")
+
+		fmt.Println(nl)
+		fmt.Println("--")
+	}
+
+	return nil
+}
+
+func markupSentence(para *strings.Builder, ssml *strings.Builder) error {
+	doc, err := prose.NewDocument(para.String(), prose.WithExtraction(false))
+	if err != nil {
+		return err
+	}
+
+	tags = tags.Push("s", ssml)
+
 	defer func() {
 		tags = tags.Pop(ssml)
 	}()
@@ -122,15 +188,25 @@ func isHeadline(line string, ssml *strings.Builder) bool {
 	return false
 }
 
-func scanParagraph(src *bufio.Scanner, para *strings.Builder) *strings.Builder {
+func toggleNarrator(line string) bool {
+	return strings.HasPrefix(line, "++")
+}
+
+func forceParagraph(line string) bool {
+	return strings.HasPrefix(line, "@@")
+}
+
+func scanParagraph(src *bufio.Scanner, para *strings.Builder, lines int) (*strings.Builder, int) {
+	count := lines
 	for src.Scan() {
 		line := src.Text()
 		if len(line) == 0 { // read lines until an empty line
 			break
 		}
 		para.WriteString(line)
+		count++
 	}
-	return para
+	return para, count
 }
 
 func cleanupLine(txt string) string {

@@ -50,7 +50,7 @@ func init() {
 }
 
 func (Voice) PollyVoiceId() types.VoiceId {
-	return types.VoiceIdJoanna
+	return types.VoiceIdAmy
 }
 
 func SynthesizeWithPolly(ctx context.Context, ssml string, dst io.Writer, voice Voice, timeout int) error {
@@ -60,11 +60,13 @@ func SynthesizeWithPolly(ctx context.Context, ssml string, dst io.Writer, voice 
 	ssmlText := string(ssml)
 	synthesisTaskInput := &polly.StartSpeechSynthesisTaskInput{
 		VoiceId:            voice.PollyVoiceId(),
+		LanguageCode:       types.LanguageCodeEnGb,
 		OutputS3BucketName: &outputBucketName,
 		OutputFormat:       types.OutputFormatMp3,
-		Engine:             types.EngineNeural,
-		TextType:           types.TextTypeSsml,
-		Text:               &ssmlText,
+		//Engine:             types.EngineStandard,
+		Engine:   types.EngineNeural,
+		TextType: types.TextTypeSsml,
+		Text:     &ssmlText,
 	}
 
 	synthesisTaskResult, err := pollyClient.StartSpeechSynthesisTask(ctx, synthesisTaskInput)

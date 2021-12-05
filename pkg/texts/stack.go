@@ -12,6 +12,11 @@ func (s TagStack) Push(tag string, dst *strings.Builder) TagStack {
 	return append(s, tag)
 }
 
+func (s TagStack) PushWithClosingTag(tag, close string, dst *strings.Builder) TagStack {
+	dst.WriteString(fmt.Sprintf("<%s>\n", tag))
+	return append(s, close)
+}
+
 func (s TagStack) Pop(dst *strings.Builder) TagStack {
 	l := len(s)
 	if l == 0 {
