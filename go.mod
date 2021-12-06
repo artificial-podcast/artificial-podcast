@@ -9,4 +9,5 @@ require (
 	github.com/jdkato/prose/v2 v2.0.0
 	github.com/stretchr/testify v1.7.0
 	github.com/txsvc/stdlib v1.4.3
+	github.com/urfave/cli/v2 v2.3.0
 )
