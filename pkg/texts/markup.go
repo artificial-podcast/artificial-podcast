@@ -142,7 +142,7 @@ func markupParagraph(para *strings.Builder, narrator bool, ssml *strings.Builder
 		ssml.WriteString(nl + "\n")
 
 		fmt.Println(nl)
-		fmt.Println("--")
+		fmt.Println("")
 	}
 
 	return nil
@@ -165,7 +165,7 @@ func markupSentence(para *strings.Builder, ssml *strings.Builder) error {
 		ssml.WriteString(nl + "\n")
 
 		fmt.Println(nl)
-		fmt.Println("--")
+		fmt.Println("")
 	}
 
 	return nil
