@@ -23,7 +23,7 @@ func TestSynthesizeWithPolly(t *testing.T) {
 	defer out.Close()
 
 	ctx := context.Background()
-	err = SynthesizeWithPolly(ctx, string(ssml), out, "Joanna", 120)
+	err = SynthesizeWithPolly(ctx, string(ssml), out, "Joanna", true, 120)
 	assert.NoError(t, err)
 }
 
@@ -36,6 +36,6 @@ func TestSynthesizeWithPollyTimeout(t *testing.T) {
 	defer out.Close()
 
 	ctx := context.Background()
-	err = SynthesizeWithPolly(ctx, string(ssml), out, "Joanna", 20) // usually takes ca 30-32 sec ...
+	err = SynthesizeWithPolly(ctx, string(ssml), out, "Joanna", true, 20) // usually takes ca 30-32 sec ...
 	assert.NoError(t, err)
 }

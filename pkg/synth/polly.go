@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/config"
@@ -49,17 +50,35 @@ func init() {
 	}
 }
 
-func (Voice) PollyVoiceId() types.VoiceId {
+func (v Voice) PollyVoice() types.VoiceId {
+	switch strings.ToLower(string(v)) {
+	case "joanna":
+		return types.VoiceIdJoanna
+	case "amy":
+		return types.VoiceIdAmy
+	}
 	return types.VoiceIdAmy
 }
 
-func SynthesizeWithPolly(ctx context.Context, ssml string, dst io.Writer, voice Voice, timeout int) error {
+/*
+func PollyVoice(voice string) types.VoiceId {
+	switch strings.ToLower(voice) {
+	case "joanna":
+		return types.VoiceIdJoanna
+	case "amy":
+		return types.VoiceIdAmy
+	}
+	return types.VoiceIdAmy
+}
+*/
+
+func SynthesizeWithPolly(ctx context.Context, ssml string, dst io.Writer, voice types.VoiceId, remove bool, timeout int) error {
 	ctx, cancel := context.WithTimeout(ctx, time.Duration(timeout)*time.Second)
 	defer cancel()
 
 	ssmlText := string(ssml)
 	synthesisTaskInput := &polly.StartSpeechSynthesisTaskInput{
-		VoiceId:            voice.PollyVoiceId(),
+		VoiceId:            voice,
 		LanguageCode:       types.LanguageCodeEnGb,
 		OutputS3BucketName: &outputBucketName,
 		OutputFormat:       types.OutputFormatMp3,
@@ -118,5 +137,15 @@ func SynthesizeWithPolly(ctx context.Context, ssml string, dst io.Writer, voice 
 		return err
 	}
 
+	if remove {
+		deleteObjectInput := &s3.DeleteObjectInput{
+			Bucket: &outputBucketName,
+			Key:    &audioFile,
+		}
+		_, err = s3Client.DeleteObject(ctx, deleteObjectInput)
+		if err != nil {
+			return err
+		}
+	}
 	return nil
 }

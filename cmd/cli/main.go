@@ -26,7 +26,6 @@ To see the full list of supported commands, run 'ap help'`
 
 var (
 	MsgMissingCmdParameters = "missing parameter(s). try 'ap help %s'"
-	MsgInvalidCmdParameters = "unknown sub-command '%s'. try 'ap help %s'"
 )
 
 func main() {
@@ -79,6 +78,11 @@ func cmdCreateAudio(c *cli.Context) error {
 		return nil
 	}
 
+	remove := !boolFlag(c, "keep") // --keep -k
+	voice := c.String("voice")
+	//format := c.String("format")
+	//language := c.String("language")
+
 	src := c.Args().First()
 	dest := ""
 	if c.NArg() > 1 {
@@ -92,7 +96,7 @@ func cmdCreateAudio(c *cli.Context) error {
 	printMsg("creating audio from %s", src)
 
 	ctx := context.Background()
-	err := synth.SynthesizeSSML(ctx, src, dest, "Amy")
+	err := synth.SynthesizeSSML(ctx, src, dest, synth.VoiceId(voice), remove)
 	if err != nil {
 		printError(c, err)
 		return nil
@@ -115,9 +119,40 @@ func setupCommands() []*cli.Command {
 			Usage:     "Create audio file from SSML text",
 			UsageText: "audio SRC [DEST]",
 			Action:    cmdCreateAudio,
+			Flags:     audioFlags(),
 		},
 	}
 	return c
+}
+
+func audioFlags() []cli.Flag {
+	f := []cli.Flag{
+		&cli.BoolFlag{
+			Name:    "keep",
+			Usage:   "Keep the audio file",
+			Aliases: []string{"k"},
+			Value:   false,
+		},
+		&cli.StringFlag{
+			Name:    "voice",
+			Usage:   "Voice used to synthesize the text with",
+			Aliases: []string{"v"},
+			Value:   "Amy",
+		},
+		&cli.StringFlag{
+			Name:    "language",
+			Usage:   "Language code",
+			Aliases: []string{"l"},
+			Value:   "en-GB",
+		},
+		&cli.StringFlag{
+			Name:    "format",
+			Usage:   "The audio format",
+			Aliases: []string{"f"},
+			Value:   "mp3",
+		},
+	}
+	return f
 }
 
 func boolFlag(c *cli.Context, flag string) bool {
