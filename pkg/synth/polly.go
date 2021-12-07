@@ -57,20 +57,11 @@ func (v Voice) PollyVoice() types.VoiceId {
 	case "amy":
 		return types.VoiceIdAmy
 	}
-	return types.VoiceIdAmy
-}
 
-/*
-func PollyVoice(voice string) types.VoiceId {
-	switch strings.ToLower(voice) {
-	case "joanna":
-		return types.VoiceIdJoanna
-	case "amy":
-		return types.VoiceIdAmy
-	}
+	// FIXME add all the other voices
+
 	return types.VoiceIdAmy
 }
-*/
 
 func SynthesizeWithPolly(ctx context.Context, ssml string, dst io.Writer, voice types.VoiceId, remove bool, timeout int) error {
 	ctx, cancel := context.WithTimeout(ctx, time.Duration(timeout)*time.Second)
@@ -82,10 +73,9 @@ func SynthesizeWithPolly(ctx context.Context, ssml string, dst io.Writer, voice 
 		LanguageCode:       types.LanguageCodeEnGb,
 		OutputS3BucketName: &outputBucketName,
 		OutputFormat:       types.OutputFormatMp3,
-		//Engine:             types.EngineStandard,
-		Engine:   types.EngineNeural,
-		TextType: types.TextTypeSsml,
-		Text:     &ssmlText,
+		Engine:             types.EngineNeural,
+		TextType:           types.TextTypeSsml,
+		Text:               &ssmlText,
 	}
 
 	synthesisTaskResult, err := pollyClient.StartSpeechSynthesisTask(ctx, synthesisTaskInput)

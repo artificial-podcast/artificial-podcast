@@ -11,9 +11,24 @@ import (
 
 // see https://docs.aws.amazon.com/polly/latest/dg/what-is.html
 
-var (
-	tags TagStack = make(TagStack, 0) // FIXME THIS MAKES THE ENTIRE THING NOT THREAD-SAFE!!!!
+type (
+	Markup struct {
+		tags TagStack
+	}
 )
+
+func (m *Markup) Push(tag string, dst *strings.Builder) {
+	m.tags = m.tags.Push(tag, dst)
+}
+
+func (m *Markup) PushWithClosingTag(tag, close string, dst *strings.Builder) {
+	m.tags = m.tags.PushWithClosingTag(tag, close, dst)
+}
+
+func (m *Markup) Pop(dst *strings.Builder) {
+	m.tags = m.
+		tags.Pop(dst)
+}
 
 func MarkupText(source, output string) error {
 	src, err := os.Open(source)
@@ -25,7 +40,11 @@ func MarkupText(source, output string) error {
 	scanner := bufio.NewScanner(src)
 	var builder strings.Builder
 
-	err = Markup(scanner, &builder)
+	markup := Markup{
+		tags: make(TagStack, 0),
+	}
+
+	err = markup.ToSSML(scanner, &builder)
 	if err != nil {
 		return err
 	}
@@ -46,17 +65,13 @@ func MarkupText(source, output string) error {
 	return err
 }
 
-func Markup(src *bufio.Scanner, ssml *strings.Builder) error {
+func (m *Markup) ToSSML(src *bufio.Scanner, ssml *strings.Builder) error {
 	narrator := false
 	paragraph := false
 
 	// wrap the whole text in <speak></speak>
-	tags = tags.Push("speak", ssml)
-	defer tags.Pop(ssml)
-
-	// add breathing sounds
-	//tags = tags.PushWithClosingTag("amazon:auto-breaths volume=\"x-soft\"", "amazon:auto-breaths", ssml)
-	//defer tags.Pop(ssml)
+	m.Push("speak", ssml)
+	defer m.Pop(ssml)
 
 	// each text is a series of paragraphs
 	for src.Scan() {
@@ -88,11 +103,11 @@ func Markup(src *bufio.Scanner, ssml *strings.Builder) error {
 		if len(line) == 0 {
 			pp, lines := scanParagraph(src, &p, 0)
 			if lines == 1 && !paragraph {
-				if err := markupSentence(pp, ssml); err != nil {
+				if err := m.sentence(pp, ssml); err != nil {
 					return err
 				}
 			} else {
-				if err := markupParagraph(pp, narrator, ssml); err != nil {
+				if err := m.paragraph(pp, narrator, ssml); err != nil {
 					return err
 				}
 			}
@@ -100,11 +115,11 @@ func Markup(src *bufio.Scanner, ssml *strings.Builder) error {
 			p.WriteString(line)
 			pp, lines := scanParagraph(src, &p, 1)
 			if lines == 1 && !paragraph {
-				if err := markupSentence(pp, ssml); err != nil {
+				if err := m.sentence(pp, ssml); err != nil {
 					return err
 				}
 			} else {
-				if err := markupParagraph(pp, narrator, ssml); err != nil {
+				if err := m.paragraph(pp, narrator, ssml); err != nil {
 					return err
 				}
 			}
@@ -120,20 +135,20 @@ func Markup(src *bufio.Scanner, ssml *strings.Builder) error {
 	return nil
 }
 
-func markupParagraph(para *strings.Builder, narrator bool, ssml *strings.Builder) error {
+func (m *Markup) paragraph(para *strings.Builder, narrator bool, ssml *strings.Builder) error {
 	doc, err := prose.NewDocument(para.String(), prose.WithExtraction(false))
 	if err != nil {
 		return err
 	}
 
-	tags = tags.Push("p", ssml)
+	m.Push("p", ssml)
 	if narrator {
-		tags = tags.PushWithClosingTag("amazon:domain name=\"news\"", "amazon:domain", ssml)
+		m.PushWithClosingTag("amazon:domain name=\"news\"", "amazon:domain", ssml)
 	}
 	defer func() {
-		tags = tags.Pop(ssml)
+		m.Pop(ssml)
 		if narrator {
-			tags = tags.Pop(ssml)
+			m.Pop(ssml)
 		}
 	}()
 
@@ -148,16 +163,16 @@ func markupParagraph(para *strings.Builder, narrator bool, ssml *strings.Builder
 	return nil
 }
 
-func markupSentence(para *strings.Builder, ssml *strings.Builder) error {
+func (m *Markup) sentence(para *strings.Builder, ssml *strings.Builder) error {
 	doc, err := prose.NewDocument(para.String(), prose.WithExtraction(false))
 	if err != nil {
 		return err
 	}
 
-	tags = tags.Push("s", ssml)
+	m.Push("s", ssml)
 
 	defer func() {
-		tags = tags.Pop(ssml)
+		m.Pop(ssml)
 	}()
 
 	for _, sent := range doc.Sentences() {
