@@ -76,54 +76,44 @@ func (m *Markup) ToSSML(src *bufio.Scanner, ssml *strings.Builder) error {
 	// each text is a series of paragraphs
 	for src.Scan() {
 		line := src.Text()
+		if len(line) == 0 {
+			continue // look for the first non-empty line
+		}
 
 		// check for markdown headlines
 		if isHeadline(line, ssml) {
-			src.Scan()
 			continue
 		}
 
 		// check for ++
-		if toggleNarrator(line) {
+		if isNarrator(line) {
 			narrator = true
 			paragraph = true
 			continue
 		}
-		// check for ++
-		if forceParagraph(line) {
+		// check for @@
+		if isParagraph(line) {
 			paragraph = true
 			continue
 		}
 
 		// else, split the text into paragraphs
 		var p strings.Builder
+		var lines int
 
-		// start a new paragraph
+		p.WriteString(line)
+		lines = scan(src, &p)
 
-		if len(line) == 0 {
-			pp, lines := scanParagraph(src, &p, 0)
-			if lines == 1 && !paragraph {
-				if err := m.sentence(pp, ssml); err != nil {
-					return err
-				}
-			} else {
-				if err := m.paragraph(pp, narrator, ssml); err != nil {
-					return err
-				}
+		if lines == 1 && !paragraph {
+			if err := m.sentence(&p, ssml); err != nil {
+				return err
 			}
 		} else {
-			p.WriteString(line)
-			pp, lines := scanParagraph(src, &p, 1)
-			if lines == 1 && !paragraph {
-				if err := m.sentence(pp, ssml); err != nil {
-					return err
-				}
-			} else {
-				if err := m.paragraph(pp, narrator, ssml); err != nil {
-					return err
-				}
+			if err := m.paragraph(&p, narrator, ssml); err != nil {
+				return err
 			}
 		}
+
 		// reset flags at the end of each paragraph
 		narrator = false
 		paragraph = false
@@ -203,16 +193,18 @@ func isHeadline(line string, ssml *strings.Builder) bool {
 	return false
 }
 
-func toggleNarrator(line string) bool {
+func isNarrator(line string) bool {
 	return strings.HasPrefix(line, "++")
 }
 
-func forceParagraph(line string) bool {
+func isParagraph(line string) bool {
 	return strings.HasPrefix(line, "@@")
 }
 
-func scanParagraph(src *bufio.Scanner, para *strings.Builder, lines int) (*strings.Builder, int) {
-	count := lines
+// scan collects lines into a paragraph until an empty line is found
+func scan(src *bufio.Scanner, para *strings.Builder) int {
+	count := 1 // already one line in the buffer ...
+
 	for src.Scan() {
 		line := src.Text()
 		if len(line) == 0 { // read lines until an empty line
@@ -221,7 +213,7 @@ func scanParagraph(src *bufio.Scanner, para *strings.Builder, lines int) (*strin
 		para.WriteString(line)
 		count++
 	}
-	return para, count
+	return count
 }
 
 func cleanupLine(txt string) string {
