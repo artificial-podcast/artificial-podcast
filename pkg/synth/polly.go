@@ -13,7 +13,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/polly/types"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 
-	"github.com/txsvc/stdlib/pkg/env"
+	"github.com/txsvc/stdlib/v2/env"
 )
 
 const (
@@ -58,7 +58,7 @@ func (v Voice) PollyVoice() types.VoiceId {
 		return types.VoiceIdAmy
 	}
 
-	// FIXME add all the other voices
+	// FIXME add more voices
 
 	return types.VoiceIdAmy
 }

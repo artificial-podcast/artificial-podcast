@@ -11,7 +11,7 @@ import (
 
 	"github.com/urfave/cli/v2"
 
-	artificialpodcast "github.com/artificial-podcast/artificial-podcast"
+	ap "github.com/artificial-podcast/artificial-podcast"
 	"github.com/artificial-podcast/artificial-podcast/pkg/synth"
 	"github.com/artificial-podcast/artificial-podcast/pkg/texts"
 )
@@ -32,8 +32,8 @@ func main() {
 
 	app := &cli.App{
 		Name:     cmdLineName,
-		Version:  artificialpodcast.VersionString,
-		Usage:    fmt.Sprintf("Artificial Podcast CLI (%s)", artificialpodcast.Version),
+		Version:  ap.VersionString,
+		Usage:    fmt.Sprintf("Artificial Podcast CLI (%s)", ap.Version),
 		Commands: setupCommands(),
 		Action: func(c *cli.Context) error {
 			fmt.Println(globalHelpText)
