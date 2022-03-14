@@ -9,4 +9,4 @@ TRAINING_FILE=gs://$BUCKET/datasets/$TRAINING
 
 python -m trainer.finetune \
     --model $MODEL \
-    --training_file $TRAINING_FILE 
+    --training-file $TRAINING_FILE 

@@ -52,7 +52,17 @@ def setup(parser):
     parser.add_argument(
         '--num-steps',
         type=int,
-        default=50
+        default=2000
+    )
+    parser.add_argument(
+        '--generate-every',
+        type=int,
+        default=1000
+    )
+    parser.add_argument(
+        '--save-every',
+        type=int,
+        default=1000
     )
     parser.add_argument(
         '--block-size',
@@ -61,7 +71,7 @@ def setup(parser):
     )
 
     parser.add_argument(
-        '--training_file',
+        '--training-file',
         required=True
     )
     parser.add_argument(
@@ -72,15 +82,13 @@ def setup(parser):
         '--cache-dir',
         default='cache'
     )
+    parser.add_argument(
+        '--disable-upload',
+        type=bool,
+        default='False'
+    )
 
     return parser.parse_args()
-
-
-def download_training_file(source, location):
-    local_location = source
-    if source.startswith('gs://'):
-        local_location = location + "/training.txt"
-        gsync.download_file(source, local_location)
 
 
 if __name__ == '__main__':
@@ -99,25 +107,26 @@ if __name__ == '__main__':
     tokenizer_file = os.path.join(args.cache_dir, 'aitextgen.tokenizer.json')
 
     # download the training file
-    local_path = os.path.join(args.cache_dir, 'input.txt')
-    gsync.download_file(args.training_file, local_path)
+    local_training_file = os.path.join(args.cache_dir, 'input.txt')
+    gsync.download_file(args.training_file, local_training_file)
 
     # parse the training file
-    tokenizer.train_tokenizer(local_path, save_path=args.cache_dir)
+    tokenizer.train_tokenizer(local_training_file, save_path=args.cache_dir)
 
     # training job configuration
     config = build_gpt2_config(
         vocab_size=args.vocab_size, max_length=args.block_size, dropout=args.dropout, n_embd=args.n_embd, n_layer=args.n_layer, n_head=args.n_head)
     data = TokenDataset(
-        local_path, tokenizer_file=tokenizer_file, block_size=args.block_size)
+        local_training_file, tokenizer_file=tokenizer_file, block_size=args.block_size)
 
     # Instantiate aitextgen using the created tokenizer and config
     ai = aitextgen(tokenizer_file=tokenizer_file, config=config)
 
     # training job
     ai.train(data, output_dir=args.cache_dir, batch_size=args.batch_size,
-             num_steps=args.num_steps, generate_every=5000, save_every=5000)
+             num_steps=args.num_steps, generate_every=args.generate_every, save_every=args.save_every)
 
-    # upload to the cloud storage
-    remote = bucket + "/" + prefix
-    gsync.sync_from_local(args.cache_dir, remote, args.model)
+    if not args.disable_upload:
+        # upload to the cloud storage
+        remote = bucket + "/" + prefix
+        gsync.sync_from_local(args.cache_dir, remote, args.model)
