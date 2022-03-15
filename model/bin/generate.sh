@@ -1,14 +1,9 @@
 #!/bin/bash
 
-# Usage: ./bin/generate.sh shakespeare 100 "ROMEO:"
+# Usage: ./bin/generate.sh prompt.yaml
 
-MODEL=$1
-MAXLENGTH=$2
-PROMPT=$3
-BUCKET=ap-pretrained-model
-MODEL_BUCKET=gs://$BUCKET/model/$MODEL
+PROMPT=$1
 
 python -m trainer.generate \
-    --model $MODEL_BUCKET \
-    --max-length $MAXLENGTH \
-    --prompt "$PROMPT" 
+    --prompt $PROMPT \
+    --disable-download True

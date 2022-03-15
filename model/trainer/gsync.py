@@ -73,10 +73,10 @@ def remote_inventory(remote, prefix):
 
 def sync_from_remote(remote, local, prefix):
     bucket_name = bucket_from_url(remote)
-    effective_prefix = prefix + "/model/"
+    effective_prefix = 'models/' + prefix + '/'
 
     blobs = storage_client.list_blobs(
-        bucket_name, max_results=None, prefix=prefix, delimiter=None)
+        bucket_name, max_results=None, prefix=effective_prefix, delimiter=None)
 
     for b in blobs:
         local_path = os.path.join(

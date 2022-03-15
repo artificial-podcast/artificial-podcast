@@ -1,0 +1,19 @@
+namespace: test1 # a sub-folder or namespace for the generated texts
+model: "draco1" # the pre-trained model used to generate the texts with
+
+generate:
+  texts: 1 # number of texts to generate per prompt
+  words: 500 # number of words per text to generate
+  temperature: 0.75 # the 'model temperature', controlls how eratic the text will be.
+
+# prompts that start the text generation
+prompts: |
+  She took a deep breath, steeling her nerves
+
+  The slight girl smiled, her expression
+
+  Harry struggled to open the door and keep Draco
+
+  That was all the threat needed to break apart
+
+  And then the man released a rabid snarl, charging full force ahead

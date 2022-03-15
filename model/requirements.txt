@@ -1,10 +1,3 @@
 # keep this in sync with setup.py
-#setuptools
-#sklearn
-#transformers == 4.9.*
-#tensorflow == 2.4.*
-#torch >= 1.8
-#datasets >= 1.8.0
-#google-cloud-storage == 1.35.*
 google-cloud-storage
 aitextgen

@@ -12,7 +12,7 @@ from aitextgen.TokenDataset import TokenDataset
 from aitextgen.utils import GPT2ConfigCPU, build_gpt2_config
 from aitextgen import aitextgen
 
-bucket = 'gs://pretrained-model'
+bucket = 'gs://ap-trained-models'
 prefix = 'models'
 
 
@@ -83,9 +83,13 @@ def setup(parser):
         default='cache'
     )
     parser.add_argument(
+        '--job-dir',
+        default='job'
+    )
+    parser.add_argument(
         '--disable-upload',
         type=bool,
-        default='False'
+        default=False
     )
 
     return parser.parse_args()
@@ -106,27 +110,44 @@ if __name__ == '__main__':
     #tokenizer_file = "aitextgen.tokenizer.json"
     tokenizer_file = os.path.join(args.cache_dir, 'aitextgen.tokenizer.json')
 
+    print(" --> Downloading the training file")
+
     # download the training file
     local_training_file = os.path.join(args.cache_dir, 'input.txt')
     gsync.download_file(args.training_file, local_training_file)
 
+    print(" --> Preparing the tokenizer")
+
     # parse the training file
     tokenizer.train_tokenizer(local_training_file, save_path=args.cache_dir)
+
+    data = TokenDataset(
+        local_training_file, tokenizer_file=tokenizer_file, block_size=args.block_size)
+
+    print(" --> Initializing the trainer")
 
     # training job configuration
     config = build_gpt2_config(
         vocab_size=args.vocab_size, max_length=args.block_size, dropout=args.dropout, n_embd=args.n_embd, n_layer=args.n_layer, n_head=args.n_head)
-    data = TokenDataset(
-        local_training_file, tokenizer_file=tokenizer_file, block_size=args.block_size)
+
+    print(" --> CONFIG")
+    print(config)
+    print('')
 
     # Instantiate aitextgen using the created tokenizer and config
     ai = aitextgen(tokenizer_file=tokenizer_file, config=config)
+
+    print(" --> Start the training")
 
     # training job
     ai.train(data, output_dir=args.cache_dir, batch_size=args.batch_size,
              num_steps=args.num_steps, generate_every=args.generate_every, save_every=args.save_every)
 
+    print(" --> Uploading the pre-trained model")
+
+    # upload to the cloud storage
     if not args.disable_upload:
-        # upload to the cloud storage
-        remote = bucket + "/" + prefix
+        remote = bucket + "/" + prefix + "/" + args.model
         gsync.sync_from_local(args.cache_dir, remote, args.model)
+
+    print(" --> DONE.")
