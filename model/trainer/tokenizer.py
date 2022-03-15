@@ -11,7 +11,7 @@ def train_tokenizer(
     prefix: str = "aitextgen",
     save_path: str = ".",
     added_tokens: List[str] = [],
-    bos_token: str = "<|endoftext|>",
+    bos_token: str = "<|startoftext|>",
     eos_token: str = "<|endoftext|>",
     unk_token: str = "<|endoftext|>",
     serialize: bool = True,

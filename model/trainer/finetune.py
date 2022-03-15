@@ -19,6 +19,11 @@ prefix = 'models'
 def setup(parser):
 
     parser.add_argument(
+        '--gpt2',
+        default='124M'
+    )
+
+    parser.add_argument(
         '--vocab-size',
         type=int,
         default=5000
@@ -43,11 +48,16 @@ def setup(parser):
         type=float,
         default=0.0
     )
-
     parser.add_argument(
         '--batch-size',
         type=int,
         default=16
+    )
+
+    parser.add_argument(
+        '--fp16',
+        type=bool,
+        default=False
     )
     parser.add_argument(
         '--num-steps',
@@ -135,13 +145,14 @@ if __name__ == '__main__':
     print('')
 
     # Instantiate aitextgen using the created tokenizer and config
-    ai = aitextgen(tokenizer_file=tokenizer_file, config=config)
+    ai = aitextgen(tf_gpt2=args.gpt2,
+                   tokenizer_file=tokenizer_file, config=config)
 
     print(" --> Start the training")
 
     # training job
-    ai.train(data, output_dir=args.cache_dir, batch_size=args.batch_size,
-             num_steps=args.num_steps, generate_every=args.generate_every, save_every=args.save_every)
+    ai.train(data, output_dir=args.cache_dir, batch_size=args.batch_size, num_steps=args.num_steps,
+             generate_every=args.generate_every, save_every=args.save_every, fp16=args.fp16)
 
     print(" --> Uploading the pre-trained model")
 

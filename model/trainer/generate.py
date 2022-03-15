@@ -91,13 +91,15 @@ def create_text_file(job_id, namespace, model_name, prompt, texts_to_generate=1,
     while i < texts_to_generate:
         i = i + 1
 
-        file_name = f"{args.cache_dir}/" + job_id + "_" + \
+        file_name = job_id + "_" + \
             datetime.datetime.fromtimestamp(
                 time.time()).strftime('%H%M%S') + f"_{i}.md"
+        
+        file_path = f"{args.cache_dir}/" + file_name
         print(f"Generating '{file_name}'")
 
         # open the file and create the frontmatter
-        tf = open(file_name, "w")
+        tf = open(file_path, "w")
         tf.write("---\n")
         tf.write(f"model: {model_name}\n")
         tf.write(f"prompt: '{prompt}'\n")
@@ -116,7 +118,7 @@ def create_text_file(job_id, namespace, model_name, prompt, texts_to_generate=1,
 
         # upload to Cloud Storage
         target = f"gs://ap-trained-models/generated/{namespace}/{file_name}"
-        gsync.upload_file(file_name, target)
+        gsync.upload_file(file_path, target)
 
         print(f"Uploaded text to '{target}'")
 
