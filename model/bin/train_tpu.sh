@@ -24,11 +24,16 @@ gcloud ai-platform jobs submit training $JOB_ID \
     --job-dir $JOB_DIR \
     --region $REGION \
     --python-version '3.7' \
-    --runtime-version '2.4' \
+    --runtime-version '2.8' \
     --packages $PACKAGE_PATH \
     --module-name 'trainer.finetune' \
-    --config bin/train.yml \
+    --config bin/train_tpu.yaml \
     -- \
     --model $MODEL \
     --training-file $TRAINING_FILE \
+    --n-tpu 8 \
+    --n-gpu 0 \
+    --fp16 False \
+    --strategy ddp \
+    --batch-size 2 \
     --num-steps 1000

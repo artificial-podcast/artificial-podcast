@@ -3,7 +3,9 @@ from setuptools import setup
 
 # keep this in sync with requirements.txt
 
-REQUIRED_PACKAGES = ['aitextgen', 'google-cloud-storage']
+REQUIRED_PACKAGES = ['aitextgen @ git+https://github.com/artificial-podcast/aitextgen.git@main',
+                     'google-cloud-storage', 
+                     'fairscale']
 
 setup(
     name='trainer',

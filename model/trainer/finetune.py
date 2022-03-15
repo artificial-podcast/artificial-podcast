@@ -5,15 +5,21 @@ import os
 import sys
 import logging
 
-from . import gsync, tokenizer
+from . import gsync
+
+from pytorch_lightning.plugins import DDPPlugin, DataParallelPlugin
+#from pytorch_lightning.strategies import DDPStrategy, DataParallelStrategy
 
 from aitextgen.TokenDataset import TokenDataset
-#from aitextgen.tokenizers import train_tokenizer
+from aitextgen.tokenizers import train_tokenizer
 from aitextgen.utils import GPT2ConfigCPU, build_gpt2_config
 from aitextgen import aitextgen
 
 bucket = 'gs://ap-trained-models'
 prefix = 'models'
+
+# get rid of the warnings
+os.environ["TOKENIZERS_PARALLELISM"] = "false"
 
 
 def setup(parser):
@@ -49,15 +55,24 @@ def setup(parser):
         default=0.0
     )
     parser.add_argument(
+        '--learning-rate',
+        type=float,
+        default=1e-3
+    )
+    parser.add_argument(
         '--batch-size',
         type=int,
         default=16
     )
 
     parser.add_argument(
-        '--fp16',
-        type=bool,
-        default=False
+        '--n-gpu',
+        type=int,
+        default=-1
+    )
+    parser.add_argument(
+        '--strategy',
+        default='dp'
     )
     parser.add_argument(
         '--num-steps',
@@ -67,12 +82,12 @@ def setup(parser):
     parser.add_argument(
         '--generate-every',
         type=int,
-        default=1000
+        default=2000
     )
     parser.add_argument(
         '--save-every',
         type=int,
-        default=1000
+        default=2000
     )
     parser.add_argument(
         '--block-size',
@@ -129,10 +144,11 @@ if __name__ == '__main__':
     print(" --> Preparing the tokenizer")
 
     # parse the training file
-    tokenizer.train_tokenizer(local_training_file, save_path=args.cache_dir)
+    train_tokenizer(local_training_file, save_path=args.cache_dir,
+                    bos_token="<|startoftext|>")
 
     data = TokenDataset(
-        local_training_file, tokenizer_file=tokenizer_file, block_size=args.block_size)
+        local_training_file, tokenizer_file=tokenizer_file, header=False, block_size=args.block_size, bos_token="<|startoftext|>")
 
     print(" --> Initializing the trainer")
 
@@ -150,9 +166,18 @@ if __name__ == '__main__':
 
     print(" --> Start the training")
 
+    # optimization ?
+    strategy = args.strategy
+    if args.strategy == "ddp":
+        strategy = DDPPlugin(find_unused_parameters=False)
+    if args.strategy == "dp":
+        strategy = DataParallelPlugin()
+
     # training job
     ai.train(data, output_dir=args.cache_dir, batch_size=args.batch_size, num_steps=args.num_steps,
-             generate_every=args.generate_every, save_every=args.save_every, fp16=args.fp16)
+             generate_every=args.generate_every, save_every=args.save_every,
+             strategy=strategy, n_gpu=args.n_gpu,
+             learning_rate=args.learning_rate)
 
     print(" --> Uploading the pre-trained model")
 
