@@ -1,0 +1,18 @@
+# example of a text generation template
+
+namespace: granger_test_355_50k # a sub-folder or namespace for the generated texts
+model: "granger_nsfw_355_50k" # the pre-trained model used to generate the texts with
+
+generate:
+  texts: 2 # number of texts to generate per prompt
+  words: 1000 # number of words per text to generate
+  temperature: 0.75 # the 'model temperature', controlls how eratic the text will be.
+
+# prompts that start the text generation
+prompts: |
+  Hermione stood in the middle of the street
+
+  So what was she doing working in a tea parlour
+
+  Without a wand, without a family he can reliably count on not
+

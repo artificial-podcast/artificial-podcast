@@ -5,5 +5,5 @@
 PROMPT=$1
 
 python -m trainer.generate \
-    --prompt $PROMPT \
-    --disable-download True
+    --prompt $PROMPT
+

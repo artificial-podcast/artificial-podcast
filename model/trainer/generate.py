@@ -79,7 +79,7 @@ def generate_text(prompt, temperature, min_words, prompt_length, gen_batch):
             txt2 = txt_generated[len(tokens):]
 
             if len(txt2) > MIN_WORDS_GEN:
-                txt = txt + ['-'] + txt2
+                txt = txt + txt2
                 repeat = False
 
     return txt
@@ -94,7 +94,7 @@ def create_text_file(job_id, namespace, model_name, prompt, texts_to_generate=1,
         file_name = job_id + "_" + \
             datetime.datetime.fromtimestamp(
                 time.time()).strftime('%H%M%S') + f"_{i}.md"
-        
+
         file_path = f"{args.cache_dir}/" + file_name
         print(f"Generating '{file_name}'")
 
@@ -153,13 +153,12 @@ if __name__ == '__main__':
     temperature = config['generate']['temperature']
     words = config['generate']['words']
 
-    print(f" --> Job configuration: {config}")
+    print(f" --> Job configuration: {config}\n")
 
-    if args.disable_download == False:
-        print(" --> Downloading the pre-trained model")
+    print(" --> Downloading the pre-trained model")
 
-        remote = bucket + "/" + prefix + "/" + model
-        gsync.sync_from_remote(remote, args.cache_dir, model)
+    remote = bucket + "/" + prefix + "/" + model
+    gsync.sync_from_remote(remote, args.cache_dir, model)
 
     print(" --> Load the model")
 
