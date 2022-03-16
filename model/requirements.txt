@@ -1,5 +1,7 @@
 # keep this in sync with setup.py
 google-cloud-storage
 #aitextgen
-torch
-git+https://github.com/artificial-podcast/aitextgen.git@main
+#torch
+#git+https://github.com/artificial-podcast/aitextgen.git@main
+gpt-2-simple
+#tensorflow >= 2.8.*
