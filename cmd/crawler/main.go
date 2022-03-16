@@ -39,20 +39,21 @@ func clean(s string) (string, int, bool) {
 	step3 := strings.ReplaceAll(step2, "__", "")
 	step4 := strings.ReplaceAll(step3, "''", "\" ")
 
-	return fmt.Sprintf("%s%s%s", startToken, step4, endToken), len(step4), false
+	//return fmt.Sprintf("%s%s%s", startToken, step4, endToken), len(step4), false
+	return step4, len(step4), false
 }
 
-func clean_rewrite(source, target string) (error, int) {
+func clean_rewrite(source, target string) (int, error) {
 	n := 0
 
 	reader, err := os.Open(source)
 	if err != nil {
-		return err, 0
+		return 0, err
 	}
 
 	dst, err := os.Create(target)
 	if err != nil {
-		return err, 0
+		return 0, err
 	}
 	writer := bufio.NewWriter(dst)
 
@@ -63,15 +64,29 @@ func clean_rewrite(source, target string) (error, int) {
 	}()
 
 	scanner := bufio.NewScanner(reader)
+	sentence := false
+
 	for scanner.Scan() {
 		line, l, skipped := clean(scanner.Text())
 		if !skipped {
+			if !sentence {
+				writer.WriteString(startToken) // <|startoftext|>
+				sentence = true
+			}
 			writer.WriteString(line)
 			n = n + l
+		} else {
+			if sentence {
+				writer.WriteString(fmt.Sprintf("%s\n", endToken)) // <|endoftext|>
+				sentence = false
+			}
 		}
 	}
+	if sentence {
+		writer.WriteString(endToken) // <|endoftext|>
+	}
 
-	return nil, n
+	return n, nil
 }
 
 func main() {
@@ -90,7 +105,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	err, l := clean_rewrite(source, output)
+	l, err := clean_rewrite(source, output)
 	if err != nil {
 		log.Fatal(err)
 	}
