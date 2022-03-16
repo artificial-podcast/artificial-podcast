@@ -12,9 +12,9 @@ from textwrap import wrap
 from . import gsync
 from aitextgen import aitextgen
 
-MIN_WORDS_GEN = 20
-PROMPT_LENGTH = 12
-GEN_BATCH = 300
+MIN_WORDS_GEN = 30
+PROMPT_LENGTH = 10
+GEN_BATCH = 100
 
 bucket = 'gs://ap-trained-models'
 prefix = 'models'
@@ -79,7 +79,7 @@ def generate_text(prompt, temperature, min_words, prompt_length, gen_batch):
             txt2 = txt_generated[len(tokens):]
 
             if len(txt2) > MIN_WORDS_GEN:
-                txt = txt + txt2
+                txt = txt + ['-'] + txt2
                 repeat = False
 
     return txt
@@ -155,7 +155,7 @@ if __name__ == '__main__':
 
     print(f" --> Job configuration: {config}")
 
-    if not args.disable_download:
+    if args.disable_download == False:
         print(" --> Downloading the pre-trained model")
 
         remote = bucket + "/" + prefix + "/" + model
