@@ -11,4 +11,6 @@ aitextgen: https://github.com/artificial-podcast/aitextgen/commit/559a465022695a
 
 #### Models
 
-* granger_nsfw_124: GPT124, 50000 iterations
+* granger_nsfw_124: GPT-2 124M, 50000 iterations -> ca. 9.8 it/s
+* granger_nsfw_124_100k: GPT-2 124M, 100000 iterations
+* granger_nsfw_355_50k: GPT-2 355M, 50000 iterations

@@ -31,6 +31,7 @@ gcloud ai-platform jobs submit training $JOB_ID \
     -- \
     --model $MODEL \
     --training-file $TRAINING_FILE \
+    --gpt2 355M \
     --strategy dp \
     --batch-size 1 \
     --num-steps 50000
