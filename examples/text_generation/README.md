@@ -17,7 +17,17 @@ Training with e.g.
 ./bin/train_gpu.sh granger_nsfw_355_50k_v2 granger_nsfw_v2.txt
 ```
 
+#### v1
+
 * granger_nsfw_124: GPT-2 124M, 50k iterations          -> training time: 1:35h, ca. 9.8 it/s
 * granger_nsfw_124_100k: GPT-2 124M, 100k iterations    -> training time: 3:04h, ca. 9.5 it/s
-
 * granger_nsfw_355_50k: GPT-2 355M, 50k iterations      -> training time: 3:48h, ca. 3.8 it/s
+
+#### v2
+
+* granger_nsfw_355_50k_v2: GPT-2 355M, 50k iterations   -> training time: 3:49h, ca. 3.8 it/s
+
+#### Generation
+
+```shell
+.bin/generate.sh 
