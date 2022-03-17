@@ -1,29 +1,29 @@
 #!/usr/bin/env python
 
+from . import model
+from . import gsync
+import gpt_2_simple as gpt2
 import os
 import sys
 import logging
 import argparse
 
-from . import gsync
-import gpt_2_simple as gpt2
+# https://stackoverflow.com/questions/35911252/disable-tensorflow-debugging-information
+# 0 = all messages are logged (default behavior)
+# 1 = INFO messages are not printed
+# 2 = INFO and WARNING messages are not printed
+# 3 = INFO, WARNING, and ERROR messages are not printed
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 
-# global configuration: know what you are doing when you change it !
-bucket = 'gs://ap-trained-models'  # the storage location
-training_file_name = 'input.txt'
 
 # finetuning configuration
-#gpt2_model = "124M"
-#num_finetune_steps = 20
-
-#training_file_url = "https://raw.githubusercontent.com/artificial-podcast/datasets/c1dfbfe59c9dcebe3d9cf1c62b1a71cd95b71f3f/examples/granger_external_v2.txt"
-#training_file_name = "granger_external_v2.txt"
-
-model_location = 'models'  # location of the model
 
 checkpoint_dir = 'checkpoint'  # location of the checkpoints
 checkpoint_fresh = 'fresh'
 checkpoint_latest = 'latest'
+
+training_sample_every = 100
+training_sample_length = 50
 
 
 def setup(parser):
@@ -57,16 +57,43 @@ def setup(parser):
     return parser.parse_args()
 
 
-def download_training_file(training_file, dest):
-    print(f" --> Downloading the training file ({training_file})")
+def do_training(args):
+    # prepare other vars
+    overwrite_checkpoints = True
+    checkpoint_label = checkpoint_latest
+    checkpoint_location = os.path.join(args.cache_dir, checkpoint_dir)
 
-    remote_training_file = f"{bucket}/datasets/{training_file}"
+    #model.upload_model(args.model, args.cache_dir, checkpoint_location)
+    # sys.exit(1)
 
-    # download the training file
-    local_training_file = os.path.join(dest, training_file_name)
-    gsync.download_file(remote_training_file, local_training_file)
+    # import training file
+    local_training_file = model.download_training_file(
+        args.training_file, args.cache_dir)
 
-    return local_training_file
+    # import model
+    if not os.path.isdir(os.path.join(args.cache_dir, args.gpt2)):
+        print(f" --> Downloading {args.gpt2} model...")
+        gpt2.download_gpt2(model_dir=args.cache_dir, model_name=args.gpt2)
+        checkpoint_label = checkpoint_fresh
+        overwrite_checkpoints = False
+
+    # fine-tuning
+    sess = gpt2.start_tf_sess()
+    gpt2.finetune(sess,
+                  local_training_file,
+                  model_name=args.gpt2,
+                  restore_from=checkpoint_label,
+                  model_dir=args.cache_dir,
+                  checkpoint_dir=checkpoint_location,
+                  batch_size=1,
+                  sample_every=training_sample_every,
+                  sample_length=training_sample_length,
+                  save_every=10,
+                  steps=args.num_steps,
+                  overwrite=overwrite_checkpoints)
+
+    # upload model
+    model.upload_model(args.model, args.cache_dir, checkpoint_location)
 
 
 if __name__ == '__main__':
@@ -75,25 +102,10 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     args = setup(parser)
 
-    print(" --> PARAMS")
-    print(args)
     print('')
+    print(f" --> Training model {args.model}")
+    print(f" --> Training configuration: {args}")
 
-    # prepare other vars
-    checkpoint_label = checkpoint_latest
-    checkpoint_location = os.path.join(args.cache_dir, checkpoint_dir)
+    do_training(args)
 
-    # import training file
-    local_training_file = download_training_file(
-        args.training_file, args.cache_dir)
-
-    # import model
-    if not os.path.isdir(os.path.join(args.cache_dir, args.gpt2)):
-        print(f" --> Downloading {args.gpt2} model...")
-        gpt2.download_gpt2(model_dir=args.cache_dir, model_name=args.gpt2)
-        checkpoint_label = checkpoint_fresh
-
-    # fine-tuning
-    sess = gpt2.start_tf_sess()
-    gpt2.finetune(sess, local_training_file, model_name=args.gpt2, restore_from=checkpoint_label,
-                  model_dir=args.cache_dir, checkpoint_dir=checkpoint_location, steps=args.num_steps)
+    print(" --> DONE.")

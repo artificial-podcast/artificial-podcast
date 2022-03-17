@@ -4,6 +4,6 @@
 
 PROMPT=$1
 
-python -m trainer.generate \
+python -m trainer.textgen \
     --prompt $PROMPT
 

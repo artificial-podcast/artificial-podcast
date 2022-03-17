@@ -5,3 +5,4 @@ google-cloud-storage
 #git+https://github.com/artificial-podcast/aitextgen.git@main
 gpt-2-simple
 #tensorflow >= 2.8.*
+pyyaml

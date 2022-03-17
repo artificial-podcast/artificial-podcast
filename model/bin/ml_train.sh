@@ -1,23 +1,20 @@
 #!/bin/bash
 
-# Usage: ./bin/train.sh draco draco.txt
+# Usage: ./bin/ml_train.sh granger_nsfw_v2.txt granger_nsfw_124_v2 10
+
+TRAINING_FILE=$1
+MODEL=$2
+STEPS=$3
 
 BUCKET=ap-trained-models
 PACKAGE_NAME=trainer-1
 REGION=europe-west4
 
 DATE=`date '+%Y%m%d_%H%M%S'`
-
-MODEL=$1
-TRAINING=$2
-
-JOB_NAME=$1_train_
+JOB_NAME=train_$2_
 JOB_ID=$JOB_NAME$DATE
-
-TRAINING_FILE=gs://$BUCKET/datasets/$TRAINING
 PACKAGE_PATH=gs://$BUCKET/packages/$PACKAGE_NAME.tar.gz
 JOB_DIR=gs://$BUCKET/jobs/$JOB_ID
-
 
 # launch the job
 gcloud ai-platform jobs submit training $JOB_ID \
@@ -26,14 +23,9 @@ gcloud ai-platform jobs submit training $JOB_ID \
     --python-version '3.7' \
     --runtime-version '2.8' \
     --packages $PACKAGE_PATH \
-    --module-name 'trainer.finetune' \
-    --config bin/train_tpu.yaml \
+    --module-name 'trainer.train' \
+    --config bin/infra_gpu.yaml \
     -- \
     --model $MODEL \
     --training-file $TRAINING_FILE \
-    --n-tpu 8 \
-    --n-gpu 0 \
-    --fp16 False \
-    --strategy ddp \
-    --batch-size 2 \
-    --num-steps 1000
+    --num-steps $STEPS

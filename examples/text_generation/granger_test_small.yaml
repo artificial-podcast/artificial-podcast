@@ -5,7 +5,7 @@ model: "granger_nsfw_124_v2" # the pre-trained model used to generate the texts 
 
 generate:
   texts: 1 # number of texts to generate per prompt
-  words: 1000 # number of words per text to generate
+  words: 200 # number of words per text to generate
   temperature: 0.75 # the 'model temperature', controlls how eratic the text will be.
 
 # prompts that start the text generation
@@ -16,14 +16,3 @@ prompts: |
 
   Without a wand, without a family he can reliably count on not
 
-  Luna was ticklish near her armpits
-
-  She tasted of pudding
-
-  He let the bottoms of his legs rest
-
-  Hermione reached down to run her hand slowly
-
-  Dracos hands moved purposefully across her
-
-  The words sent a shudder through his body

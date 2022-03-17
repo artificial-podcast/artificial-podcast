@@ -73,14 +73,12 @@ def remote_inventory(remote, prefix):
 
 def sync_from_remote(remote, local, prefix):
     bucket_name = bucket_from_url(remote)
-    effective_prefix = 'models/' + prefix + '/'
 
     blobs = storage_client.list_blobs(
-        bucket_name, max_results=None, prefix=effective_prefix, delimiter=None)
+        bucket_name, max_results=None, prefix=prefix, delimiter=None)
 
     for b in blobs:
-        local_path = os.path.join(
-            local, remove_prefix(b.name, effective_prefix))
+        local_path = os.path.join(local, remove_prefix(b.name, prefix))
         path = os.path.dirname(local_path)
 
         if not os.path.isdir(path):
@@ -102,7 +100,7 @@ def sync_from_local(local, remote, prefix, sync=False):
         if len(files) > 0:
             for f in files:
                 local_path = os.path.join(root, f)
-                remote_path = remote_base + local_path.strip(local)
+                remote_path = f"{remote_base}/{f}"
                 if sync:
                     try:
                         inventory.remove(remote_path)
@@ -110,21 +108,22 @@ def sync_from_local(local, remote, prefix, sync=False):
                         None
 
                 blob = bucket.blob(remote_path)
-                blob.upload_from_filename(local_path)
+
+                success = False
+                retry = 0
+                while success == False:
+                    try:
+                        blob.upload_from_filename(local_path)
+                        success = True
+                    except:
+                        retry = retry + 1
+                        if retry > 3:
+                            sys.exit(0)
+                        print(f"Re-try upload of '{local_path}'. ({retry}/3)")
+                        pass
+
     if sync:
         for f in inventory:
             blob = bucket.blob(f)
             if blob.exists():
                 blob.delete()
-
-
-if __name__ == '__main__':
-
-    remote = 'gs://artificial-podcast/pretrained/test'
-    prefix = 'pretrained/test'
-    local = 'model'
-
-    sync_from_remote(remote, local, prefix)
-    #sync_from_local(local, remote, prefix, True)
-    # print("")
-    #remote_inventory(remote, prefix)
