@@ -1,7 +1,21 @@
 import os
 from google.cloud import storage
 
-storage_client = storage.Client()
+# os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
+
+# the Google cloud credential file
+credential_file = 'credentials.json'
+
+storage_client = None
+try:
+    storage_client = storage.Client()
+except:
+    try:
+        storage_client = storage.Client.from_service_account_json(
+            credential_file)
+    except:
+        sys.exit(1)
+
 
 SEP = "/"
 

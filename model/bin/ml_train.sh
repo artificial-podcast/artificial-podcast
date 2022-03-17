@@ -7,7 +7,7 @@ MODEL=$2
 STEPS=$3
 
 BUCKET=ap-trained-models
-PACKAGE_NAME=trainer-1
+PACKAGE_NAME=trainer-2
 REGION=europe-west4
 
 DATE=`date '+%Y%m%d_%H%M%S'`
@@ -28,4 +28,5 @@ gcloud ai-platform jobs submit training $JOB_ID \
     -- \
     --model $MODEL \
     --training-file $TRAINING_FILE \
-    --num-steps $STEPS
+    --num-steps $STEPS \
+    --checkpoints True

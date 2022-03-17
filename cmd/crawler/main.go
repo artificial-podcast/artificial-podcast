@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"errors"
 	"fmt"
 	"log"
 	"os"
@@ -13,8 +14,10 @@ import (
 const (
 	minLineLength = 5
 
-	startToken   = "<|startoftext|>"
-	endToken     = "<|endoftext|>"
+	//startToken   = "<|startoftext|>"
+	//endToken     = "<|endoftext|>"
+	startToken   = ""
+	endToken     = "\n"
 	newLineToken = "<|lf|>"
 )
 
@@ -100,9 +103,13 @@ func main() {
 	source := fmt.Sprintf("%s/%s.txt", path, id)
 	output := fmt.Sprintf("%s/%s.training.txt", path, id)
 
-	err := crawler.RetrieveFromAO3(id, source)
-	if err != nil {
-		log.Fatal(err)
+	if _, err := os.Stat(source); errors.Is(err, os.ErrNotExist) {
+
+		err := crawler.RetrieveFromAO3(id, source)
+
+		if err != nil {
+			log.Fatal(err)
+		}
 	}
 
 	l, err := clean_rewrite(source, output)

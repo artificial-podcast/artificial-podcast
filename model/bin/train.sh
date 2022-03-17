@@ -9,4 +9,5 @@ STEPS=$3
 python -m trainer.train \
     --model $MODEL \
     --training-file $TRAINING_FILE \
-    --num-steps $STEPS
+    --num-steps $STEPS \
+    --checkpoints True

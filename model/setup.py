@@ -9,7 +9,7 @@ REQUIRED_PACKAGES = ['gpt-2-simple', 'tensorflow >= 2.8.*',
 
 setup(
     name='trainer',
-    version='1',
+    version='2',
     install_requires=REQUIRED_PACKAGES,
     packages=find_packages(),
     include_package_data=True,

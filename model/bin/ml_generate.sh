@@ -5,7 +5,7 @@
 PROMPT=$1
 
 BUCKET=ap-trained-models
-PACKAGE_NAME=trainer-1
+PACKAGE_NAME=trainer-2
 REGION=europe-west4
 
 DATE=`date '+%Y%m%d_%H%M%S'`
