@@ -24,4 +24,5 @@ gcloud ai-platform jobs submit training $JOB_ID \
     --module-name 'trainer.textgen' \
     --config bin/infra_gpu.yaml \
     -- \
-    --prompt $PROMPT
+    --prompt $PROMPT \
+    --id $DATE

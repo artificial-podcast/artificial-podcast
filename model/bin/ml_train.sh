@@ -29,4 +29,5 @@ gcloud ai-platform jobs submit training $JOB_ID \
     --model $MODEL \
     --training-file $TRAINING_FILE \
     --num-steps $STEPS \
+    --id $DATE \
     --checkpoints True

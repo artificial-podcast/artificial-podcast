@@ -3,7 +3,7 @@ import yaml
 import time
 import datetime
 
-from . import gsync
+from gsync import download_file, upload_file, sync_from_local, sync_from_remote
 import gpt_2_simple as gpt2
 
 run_name = 'run1'
@@ -32,7 +32,7 @@ def download_training_file(training_file, dest):
 
     # download the training file
     local_training_file = os.path.join(dest, training_file_name)
-    gsync.download_file(remote_training_file, local_training_file)
+    download_file(remote_training_file, local_training_file)
 
     return local_training_file
 
@@ -46,7 +46,7 @@ def download_config_file(prompt_file, cache_dir):
     print(f" --> Downloading config from '{remote_prompt_file}'")
 
     # download and parse the config file
-    gsync.download_file(remote_prompt_file, config_file)
+    download_file(remote_prompt_file, config_file)
 
     with open(config_file, 'r') as cf:
         try:
@@ -66,15 +66,15 @@ def upload_model(model, cache_dir, checkpoint_dir):
     local_training_file = os.path.join(cache_dir, training_file_name)
     remote_training_file = f"{remote_base_dir}/{training_file_name}"
 
-    gsync.upload_file(local_training_file, remote_training_file)
+    upload_file(local_training_file, remote_training_file)
 
     # model checkpoints
     local_checkpoint_location = f"{checkpoint_dir}/{run_name}"
     remote_checkpoint_location = f"{remote_base_dir}/{model_prefix}"
     sync_prefix = f"models/{model}/{model_prefix}"
 
-    gsync.sync_from_local(local_checkpoint_location,
-                          remote_checkpoint_location, sync_prefix, True)
+    sync_from_local(local_checkpoint_location,
+                    remote_checkpoint_location, sync_prefix, True)
 
 
 def download_model(model, cache_dir, checkpoint_dir):
@@ -87,8 +87,8 @@ def download_model(model, cache_dir, checkpoint_dir):
     remote_checkpoint_location = f"{remote_base_dir}/{model_prefix}"
     sync_prefix = f"models/{model}/{model_prefix}/"
 
-    gsync.sync_from_remote(remote_checkpoint_location,
-                           local_checkpoint_location, sync_prefix)
+    sync_from_remote(remote_checkpoint_location,
+                     local_checkpoint_location, sync_prefix)
 
 
 def generate_text(tf_sess, checkpoint_location, initial_prompt, temperature, min_words, seq_length, prompt_length):
@@ -140,14 +140,14 @@ def generate_text(tf_sess, checkpoint_location, initial_prompt, temperature, min
     return txt
 
 
-def generate_text_file(tf_sess, checkpoint_location, namespace, model_name, prompt, texts_to_generate=1, temperature=0.75, min_words=500, working_dir='.'):
+def generate_text_file(tf_sess, job_id, checkpoint_location, namespace, model_name, prompt, texts_to_generate=1, temperature=0.75, min_words=500, working_dir='.'):
     i = 0
 
     while i < texts_to_generate:
         i = i + 1
 
         ts = datetime.datetime.fromtimestamp(time.time()).strftime('%H%M%S')
-        file_name = f"{namespace}_{ts}_{i}.md"
+        file_name = f"{namespace}_{job_id}_{ts}.md"
 
         file_path = f"{working_dir}/" + file_name
         print(f" --> Generating '{file_name}'")
@@ -170,7 +170,7 @@ def generate_text_file(tf_sess, checkpoint_location, namespace, model_name, prom
         tf.close()
 
         target = f"{bucket}/generated/{namespace}/{file_name}"
-        gsync.upload_file(file_path, target)
+        upload_file(file_path, target)
 
         print(f" --> Uploaded text to '{target}'")
 
@@ -205,7 +205,8 @@ def generate(args):
     for p in prompts:
         if len(p) > 0:
             prompt = p.strip()
-            generate_text_file(sess, checkpoint_location, namespace, model_name, prompt,
+            generate_text_file(sess, args.id, checkpoint_location, 
+                               namespace, model_name, prompt,
                                texts_to_generate, temperature, num_words,
                                working_dir=args.cache_dir)
 

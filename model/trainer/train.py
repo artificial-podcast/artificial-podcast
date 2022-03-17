@@ -5,7 +5,7 @@ import sys
 import logging
 import argparse
 
-from . import model
+from model import training
 
 # https://stackoverflow.com/questions/35911252/disable-tensorflow-debugging-information
 # 0 = all messages are logged (default behavior)
@@ -22,6 +22,10 @@ def setup():
     parser.add_argument(
         '--cache-dir',
         default='cache'
+    )
+    parser.add_argument(
+        '--id',         # a unique id for the job
+        default='id'
     )
     parser.add_argument(
         '--checkpoints', # set to true to continue training
@@ -62,6 +66,6 @@ if __name__ == '__main__':
     print(f" --> Training model {args.model}")
     print(f" --> Training configuration: {args}")
 
-    model.training(args)
+    training(args)
 
     print(" --> DONE.")

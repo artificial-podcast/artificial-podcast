@@ -5,7 +5,7 @@ import sys
 import logging
 import argparse
 
-from . import model
+from model import generate
 
 # https://stackoverflow.com/questions/35911252/disable-tensorflow-debugging-information
 # 0 = all messages are logged (default behavior)
@@ -22,6 +22,10 @@ def setup():
     parser.add_argument(
         '--job-dir',    # a working dir for training on the AI platform
         default='job'
+    )
+    parser.add_argument(
+        '--id',         # a unique id for the job
+        default='id'
     )
     parser.add_argument(
         '--cache-dir',
@@ -44,6 +48,6 @@ if __name__ == '__main__':
     print(f" --> Generating text from model {args.prompt}")
     print(f" --> Configuration: {args}")
 
-    model.generate(args)
+    generate(args)
 
     print(" --> DONE.")
