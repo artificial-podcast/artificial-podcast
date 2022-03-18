@@ -1,27 +1,21 @@
 # artificial-podcast
 Create podcasts from AI generated fanfiction
 
-### Python environment for local model training
+### Environment setup for local development
+
+#### Python environment
 
 ```shell
-pip3 install virtualenv
-
 python3 -m venv env
 
 source env/bin/activate
 
-...
-...
+... do stuff ...
 
 deactivate
 ```
 
-### References
-
-* https://huggingface.co/docs/transformers/model_doc/gpt2
-* https://cloud.google.com/ai-platform/training/docs
-
-### Tensorflow on M1 Mac
+#### Tensorflow on a M1 Mac
 
 ```shell
 brew install hdf5
@@ -30,8 +24,6 @@ brew install hdf5
 export HDF5_DIR=/opt/homebrew/Cellar/hdf5/1.13.0/
 pip install --no-binary=h5py h5py
 
-python -m pip install tensorflow-macos
-
 # https://developer.apple.com/forums/thread/691317
 pip install tensorflow-macos --no-cache-dir
 
@@ -39,3 +31,8 @@ pip install tensorflow-macos --no-cache-dir
 pip install tensorflow-metal
 
 ```
+
+### References
+
+* https://huggingface.co/docs/transformers/model_doc/gpt2
+* https://cloud.google.com/ai-platform/training/docs
