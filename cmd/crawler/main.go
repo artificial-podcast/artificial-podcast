@@ -4,11 +4,14 @@ import (
 	"bufio"
 	"errors"
 	"fmt"
+	"io"
+	"io/ioutil"
 	"log"
 	"os"
 	"strings"
 
 	"github.com/artificial-podcast/artificial-podcast/pkg/crawler"
+	"github.com/txsvc/stdlib/v2/timestamp"
 )
 
 const (
@@ -92,30 +95,95 @@ func clean_rewrite(source, target string) (int, error) {
 	return n, nil
 }
 
-func main() {
-	if len(os.Args) != 3 {
-		log.Fatal(fmt.Errorf("invalid arguments"))
+func merge(path string) error {
+
+	// create and open the merge file
+
+	merge_file := fmt.Sprintf("%s/merge_%d.txt", path, timestamp.Now())
+	out, err := os.OpenFile(merge_file, os.O_CREATE|os.O_WRONLY, 0644)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer out.Close()
+
+	// scan the dir for files to merge into
+	files, err := ioutil.ReadDir(path)
+	if err != nil {
+		log.Fatal(err)
 	}
 
-	id := os.Args[1]
-	path := os.Args[2]
+	for _, f := range files {
+		if strings.HasSuffix(f.Name(), ".training.txt") {
+			full_path := fmt.Sprintf("%s/%s", path, f.Name())
 
+			merge, err := os.Open(full_path)
+			if err != nil {
+				log.Fatal(err)
+			}
+			defer merge.Close()
+
+			_, err = io.Copy(out, merge)
+			if err != nil {
+				log.Fatal(err)
+			}
+		}
+	}
+	return nil
+}
+
+func process(id, path string) error {
 	source := fmt.Sprintf("%s/%s.txt", path, id)
 	output := fmt.Sprintf("%s/%s.training.txt", path, id)
 
 	if _, err := os.Stat(source); errors.Is(err, os.ErrNotExist) {
-
-		err := crawler.RetrieveFromAO3(id, source)
-
-		if err != nil {
-			log.Fatal(err)
+		if err := crawler.RetrieveFromAO3(id, source); err != nil {
+			return err
 		}
 	}
 
 	l, err := clean_rewrite(source, output)
 	if err != nil {
-		log.Fatal(err)
+		return err
 	}
 
 	fmt.Printf("Retrieved '%s'. Length=%d characters.\n", output, l)
+
+	return nil
+}
+
+func main() {
+	if len(os.Args) != 3 {
+		log.Fatal(fmt.Errorf("invalid arguments"))
+	}
+
+	input := os.Args[1]
+	path := os.Args[2]
+
+	if strings.HasSuffix(input, ".txt") {
+		file, err := os.Open(input)
+		if err != nil {
+			log.Fatal(err)
+		}
+		defer file.Close()
+
+		// read id's from the input file and retrieve the texts
+		scanner := bufio.NewScanner(file)
+		for scanner.Scan() {
+			id := scanner.Text()
+
+			if err := process(id, path); err != nil {
+				log.Fatal(err)
+			}
+		}
+
+		// merge all the texts
+		if err := merge(path); err != nil {
+			log.Fatal(err)
+		}
+
+	} else {
+		if err := process(input, path); err != nil {
+			log.Fatal(err)
+		}
+	}
 }
