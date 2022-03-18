@@ -4,6 +4,9 @@
 
 PROMPT=$1
 
-python -m trainer.generate \
-    --prompt $PROMPT
+DATE=`date '+%Y%m%d_%H%M%S'`
+
+python -m trainer.textgen \
+    --prompt $PROMPT \
+    --id $DATE
 

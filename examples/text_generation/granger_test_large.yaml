@@ -5,7 +5,7 @@ model: "granger_nsfw_124_v2" # the pre-trained model used to generate the texts 
 
 generate:
   texts: 1 # number of texts to generate per prompt
-  words: 1000 # number of words per text to generate
+  words: 2500 # number of words per text to generate
   temperature: 0.75 # the 'model temperature', controlls how eratic the text will be.
 
 # prompts that start the text generation
@@ -24,6 +24,10 @@ prompts: |
 
   Hermione reached down to run her hand slowly
 
+  Dracos hands moved purposefully
+
   Dracos hands moved purposefully across her
+
+  He slid his tongue down the front of her
 
   The words sent a shudder through his body
