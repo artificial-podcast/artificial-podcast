@@ -15,7 +15,7 @@ import (
 )
 
 const (
-	minLineLength = 5
+	minLineLength = 20
 
 	//startToken   = "<|startoftext|>"
 	//endToken     = "<|endoftext|>"
@@ -24,7 +24,7 @@ const (
 	newLineToken = "<|lf|>"
 )
 
-var stopWords = []string{"notes:", "summary:", "chapter", "disclaimer:", "http://", "***"}
+var stopWords = []string{"notes:", "summary:", "chapter text", "disclaimer:", "https://", "http://", "****", "....", ". . ."}
 
 func clean(s string) (string, int, bool) {
 	step1 := strings.Trim(s, " ")
@@ -36,7 +36,7 @@ func clean(s string) (string, int, bool) {
 	checks := strings.ToLower(step1)
 
 	for _, word := range stopWords {
-		if strings.HasPrefix(checks, word) {
+		if strings.Contains(checks, word) {
 			return "", 0, true
 		}
 	}
