@@ -16,7 +16,8 @@ run_name = 'run1'
 model_prefix = 'model'
 training_file_name = 'input.txt'
 
-bucket = 'gs://ap-trained-models'  # the storage location
+model_bucket = 'gs://ap-trained-models'  # the storage location
+text_bucket = 'gs://ap-generated-texts'  # the storage location
 
 checkpoint_dir = 'checkpoint'  # location of the checkpoints
 checkpoint_fresh = 'fresh'
@@ -33,7 +34,7 @@ MIN_SEQUENCE_LENGTH = 100
 def download_training_file(training_file, dest):
     print(f" --> Downloading the training file ({training_file})")
 
-    remote_training_file = f"{bucket}/datasets/{training_file}"
+    remote_training_file = f"{model_bucket}/datasets/{training_file}"
 
     # download the training file
     local_training_file = os.path.join(dest, training_file_name)
@@ -46,7 +47,7 @@ def download_config_file(prompt_file, cache_dir):
     config = {}
 
     config_file = f"{cache_dir}/generate.yaml"
-    remote_prompt_file = f"{bucket}/generated/{prompt_file}"
+    remote_prompt_file = f"{text_bucket}/prompts/{prompt_file}"
 
     print(f" --> Downloading config from '{remote_prompt_file}'")
 
@@ -63,7 +64,7 @@ def download_config_file(prompt_file, cache_dir):
 
 
 def upload_model(model, cache_dir, checkpoint_dir):
-    remote_base_dir = f"{bucket}/models/{model}"
+    remote_base_dir = f"{model_bucket}/models/{model}"
 
     print(f" --> Uploading training assets to '{remote_base_dir}'")
 
@@ -83,7 +84,7 @@ def upload_model(model, cache_dir, checkpoint_dir):
 
 
 def download_model(model, cache_dir, checkpoint_dir):
-    remote_base_dir = f"{bucket}/models/{model}"
+    remote_base_dir = f"{model_bucket}/models/{model}"
 
     print(f" --> Downloading model from '{remote_base_dir}'")
 
@@ -176,7 +177,7 @@ def generate_text_file(tf_sess, job_id, checkpoint_location, namespace, model_na
         tf.close()
 
         # upload to cloud storage
-        target = f"{bucket}/generated/{namespace}/{file_name}"
+        target = f"{text_bucket}/generated/{namespace}/{file_name}"
         upload_file(file_path, target)
 
         print(f" --> Uploaded text to '{target}'")
