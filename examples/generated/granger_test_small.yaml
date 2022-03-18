@@ -1,13 +1,16 @@
 # example of a text generation template
 
-namespace: granger_test_124_100k # a sub-folder or namespace for the generated texts
-model: "granger_nsfw_124_100k" # the pre-trained model used to generate the texts with
+namespace: granger_test # a sub-folder or namespace for the generated texts
+model: "granger_nsfw_124_v2" # the pre-trained model used to generate the texts with
 
 generate:
-  texts: 2 # number of texts to generate per prompt
-  words: 1000 # number of words per text to generate
+  texts: 1 # number of texts to generate per prompt
+  words: 500 # number of words per text to generate
   temperature: 0.75 # the 'model temperature', controlls how eratic the text will be.
 
+metadata:
+  labels: potterverse, hermione granger, nsfw
+  
 # prompts that start the text generation
 prompts: |
   Hermione stood in the middle of the street

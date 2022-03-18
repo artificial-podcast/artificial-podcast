@@ -97,6 +97,26 @@ def download_model(model, cache_dir, checkpoint_dir):
                      local_checkpoint_location, sync_prefix)
 
 
+def clean_text(txt):
+
+    # step 1: normalize the quotation marks
+    step1 = txt.replace('”', '"').replace('“', '"')
+
+    # step 2: break-up continous text into paragraphs
+    step2 = step1.replace('" "', '"\n\n"').replace('""', '"\n\n"')
+    step2 = step2.replace('"."', '"\n\n"').replace('."', '.\n\n"').replace('. "', '.\n\n"')
+    step2 = step2.replace('@ @', '\n\n')
+
+    # step 3: remove unwanted chars
+    final = step2.replace('…', '... ').replace('�', '')
+
+    # close the text properly
+    last = final.rfind('.')
+    if last == -1:
+        return final
+    return final[:last+1]
+
+
 def generate_text(tf_sess, checkpoint_location, initial_prompt, temperature, min_words, seq_length, prompt_length):
 
     def generate_sequence(sess, checkpoint_location, prompt, temperature, seq_length):
@@ -146,7 +166,7 @@ def generate_text(tf_sess, checkpoint_location, initial_prompt, temperature, min
     return txt
 
 
-def generate_text_file(tf_sess, job_id, checkpoint_location, namespace, model_name, prompt, texts_to_generate=1, temperature=0.75, min_words=500, working_dir='.'):
+def generate_text_file(tf_sess, job_id, namespace, model_name, prompt, labels, temperature=0.75, min_words=500, texts_to_generate=1, checkpoint_location=checkpoint_dir, working_dir='.'):
     i = 0
 
     while i < texts_to_generate:
@@ -158,22 +178,24 @@ def generate_text_file(tf_sess, job_id, checkpoint_location, namespace, model_na
         file_path = f"{working_dir}/" + file_name
         print(f" --> Generating '{file_name}'")
 
-        # open the file and create the frontmatter
-        tf = open(file_path, "w")
-        tf.write("---\n")
-        tf.write(f"prompt: '{prompt}'\n")
-        tf.write(f"model: {model_name}\n")
-        tf.write("\tfandom:\n")
-        tf.write("\tlabels:\n")
-        tf.write("---\n\n")
-
         # generate the text
         gen_txt = generate_text(
             tf_sess, checkpoint_location, prompt, temperature, min_words, MIN_SEQUENCE_LENGTH, PROMPT_LENGTH)
         joint_txt = " ".join(gen_txt)
 
-        # write the text and close the file
-        tf.write(joint_txt.replace('@', '\n\n'))
+        # open the file and create the frontmatter
+        tf = open(file_path, "w")
+        tf.write("---\n")
+        tf.write(f"prompt: '{prompt}'\n")
+        tf.write("generate:\n")
+        tf.write(f"\tlabels: '{labels}'\n")
+        tf.write(f"\tmodel: {model_name}\n")
+        tf.write(f"\twords: {len(gen_txt)}\n")
+        tf.write(f"\ttemperature: {temperature}\n")
+        tf.write("---\n\n")
+
+        # clean and write the text then close the file
+        tf.write(clean_text(joint_txt))
         tf.close()
 
         # upload to cloud storage
@@ -183,17 +205,18 @@ def generate_text_file(tf_sess, job_id, checkpoint_location, namespace, model_na
         print(f" --> Uploaded text to '{target}'")
 
 
-def generate_single_text(job_id, namespace, model_name, prompt, temperature=0.75, num_words=500, texts_to_generate=1, checkpoint_location=checkpoint_dir, checkpoint_label=checkpoint_latest, temp_location='cache'):
+def generate_single_text(job_id, namespace, model_name, prompt, labels='none', temperature=0.75, num_words=500, texts_to_generate=1, checkpoint_location=checkpoint_dir, checkpoint_label=checkpoint_latest, temp_location='cache'):
     # load the model
     sess = gpt2.start_tf_sess()
     gpt2.load_gpt2(sess, checkpoint=checkpoint_label,
                    checkpoint_dir=checkpoint_location)
 
     # generate the text
-    generate_text_file(sess, job_id, checkpoint_location,
+    generate_text_file(sess, job_id,
                        namespace, model_name,
-                       prompt, texts_to_generate, temperature, num_words,
-                       working_dir=temp_location)
+                       prompt, labels,
+                       temperature, num_words, texts_to_generate,
+                       checkpoint_location=checkpoint_location, working_dir=temp_location)
 
     # reset tf in order to avoid OOMs
     gpt2.reset_session(sess)
@@ -210,6 +233,7 @@ def generate(args):
     texts_to_generate = config['generate']['texts']
     temperature = config['generate']['temperature']
     num_words = config['generate']['words']
+    labels = config['metadata']['labels']
 
     print(f" --> Prompts: {config}")
 
@@ -226,9 +250,10 @@ def generate(args):
             prompt = p.strip()
 
             generate_single_text(args.id, namespace, model_name,
-                                 prompt,
+                                 prompt, labels,
                                  temperature=temperature, num_words=num_words, texts_to_generate=texts_to_generate,
-                                 checkpoint_location=checkpoint_location, checkpoint_label=checkpoint_latest, temp_location=args.cache_dir)
+                                 checkpoint_location=checkpoint_location, checkpoint_label=checkpoint_latest,
+                                 temp_location=args.cache_dir)
 
 
 def training(args):

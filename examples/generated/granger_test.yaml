@@ -5,14 +5,22 @@ model: "granger_nsfw_124_v2" # the pre-trained model used to generate the texts 
 
 generate:
   texts: 1 # number of texts to generate per prompt
-  words: 200 # number of words per text to generate
+  words: 1000 # number of words per text to generate
   temperature: 0.75 # the 'model temperature', controlls how eratic the text will be.
+
+metadata:
+  labels: potterverse, hermione granger, nsfw
 
 # prompts that start the text generation
 prompts: |
-  Hermione stood in the middle of the street
+  Luna was ticklish near her armpits
 
-  So what was she doing working in a tea parlour
+  She tasted of pudding
 
-  Without a wand, without a family he can reliably count on not
+  He let the bottoms of his legs rest
 
+  Hermione reached down to run her hand slowly
+
+  Dracos hands moved purposefully across her
+
+  The words sent a shudder through his body

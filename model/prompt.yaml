@@ -6,6 +6,9 @@ generate:
   words: 500 # number of words per text to generate
   temperature: 0.75 # the 'model temperature', controlls how eratic the text will be.
 
+metadata:
+  labels: nsfw, potterverse
+
 # prompts that start the text generation
 prompts: |
   She took a deep breath, steeling her nerves
