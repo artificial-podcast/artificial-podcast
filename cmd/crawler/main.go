@@ -112,6 +112,8 @@ func merge(path string) error {
 		log.Fatal(err)
 	}
 
+	num := 0
+	var l int64
 	for _, f := range files {
 		if strings.HasSuffix(f.Name(), ".training.txt") {
 			full_path := fmt.Sprintf("%s/%s", path, f.Name())
@@ -122,12 +124,17 @@ func merge(path string) error {
 			}
 			defer merge.Close()
 
-			_, err = io.Copy(out, merge)
+			n, err := io.Copy(out, merge)
 			if err != nil {
 				log.Fatal(err)
 			}
+			l = l + n
+			num++
 		}
 	}
+
+	fmt.Printf("Merged %d files into '%s'. Total length=%d characters.\n", num, merge_file, l)
+
 	return nil
 }
 
