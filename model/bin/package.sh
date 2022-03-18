@@ -1,7 +1,7 @@
 #!/bin/bash
 
 MODEL_NAME=trainer
-MODEL_VERSION=1
+MODEL_VERSION=2
 
 BUCKET=ap-trained-models
 
