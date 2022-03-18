@@ -22,7 +22,7 @@ Test run with 33Mb training set
 * n1-standard-4, 1x NVIDIA_TESLA_T4,b=2 job: train_granger_nsfw_124_v2_20220318_095024 -> cancelled because GPU at 100%
 * n1-standard-4, 2x NVIDIA_TESLA_T4,b=2 job: train_granger_nsfw_124_v2_20220318_095126 -> cancelled because stalled for > 15min
 * n1-standard-4, 2x NVIDIA_TESLA_T4,b=1 job: train_granger_nsfw_124_v2_20220318_101645 -> t=28'21''
-* n1-standard-4, 1x NVIDIA_TESLA_V100,b=1 job: train_granger_nsfw_124_v2_20220318_110508 -> t=
+* n1-standard-4, 1x NVIDIA_TESLA_V100,b=1 job: train_granger_nsfw_124_v2_20220318_110508 -> t=15'50''
 
 
 #### Models
