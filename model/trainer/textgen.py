@@ -5,7 +5,7 @@ import sys
 import logging
 import argparse
 
-from .model import training
+from .model import generate
 
 # https://stackoverflow.com/questions/35911252/disable-tensorflow-debugging-information
 # 0 = all messages are logged (default behavior)
