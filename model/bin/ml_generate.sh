@@ -22,7 +22,7 @@ gcloud ai-platform jobs submit training $JOB_ID \
     --runtime-version '2.8' \
     --packages $PACKAGE_PATH \
     --module-name 'trainer.textgen' \
-    --config bin/infra_gpu.yaml \
+    --config bin/cloud_infra.yaml \
     -- \
     --prompt $PROMPT \
     --id $DATE
