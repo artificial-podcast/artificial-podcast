@@ -8,6 +8,7 @@ stuff.md
 **/_hack/**
 **/cache/**
 **/samples/**
+**/bin/*.yaml
 
 # PYTHON STUFF
 
