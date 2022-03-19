@@ -104,7 +104,7 @@ def clean_text(txt):
 
     # step 2: break-up continous text into paragraphs
     step2 = step1.replace('" "', '"\n\n"').replace('""', '"\n\n"')
-    step2 = step2.replace('"."', '"\n\n"').replace('."', '.\n\n"').replace('. "', '.\n\n"')
+    step2 = step2.replace('"."', '"\n\n"').replace('. "', '.\n\n"') #.replace('."', '.\n\n"')
     step2 = step2.replace('@ @', '\n\n')
 
     # step 3: remove unwanted chars
