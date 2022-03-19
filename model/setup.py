@@ -5,7 +5,7 @@ from setuptools import setup
 
 REQUIRED_PACKAGES = ['gpt-2-simple', 'tensorflow >= 2.8.*',
                      'google-cloud-storage',
-                     'pyyaml']
+                     'pyyaml','psutil']
 
 setup(
     name='trainer',

@@ -1,7 +1,14 @@
+import gpt_2_simple as gpt2
 import os
 import yaml
 import time
 import datetime
+import requests
+import psutil
+
+import logging
+logging.basicConfig(format="%(asctime)s — %(levelname)s — %(name)s — %(message)s",
+                    datefmt="%d-%m-%Y %H:%M:%S", level=logging.INFO)
 
 try:
     # notebook
@@ -10,7 +17,6 @@ except:
     # ml platform
     from .gsync import download_file, upload_file, sync_from_local, sync_from_remote
 
-import gpt_2_simple as gpt2
 
 run_name = 'run1'
 model_prefix = 'model'
@@ -30,15 +36,26 @@ training_sample_length = 50
 PROMPT_LENGTH = 12
 MIN_SEQUENCE_LENGTH = 150
 
+# free TF every 2 or 3 runs depending on how much memory is available
+purge_freq = 2
+if psutil.virtual_memory().total / (1024*1024) > 16384:
+    purge_freq = 3
+
 
 def download_training_file(training_file, dest):
-    print(f" --> Downloading the training file ({training_file})")
-
-    remote_training_file = f"{model_bucket}/datasets/{training_file}"
-
-    # download the training file
     local_training_file = os.path.join(dest, training_file_name)
-    download_file(remote_training_file, local_training_file)
+
+    if training_file.find('http') != -1:
+        # download the training file from the provided URL
+        data = requests.get(training_file)
+        with open(local_training_file, 'w') as f:
+            f.write(data.text)
+    else:
+        # download the training file from a bucket
+        remote_training_file = f"{model_bucket}/datasets/{training_file}"
+        download_file(remote_training_file, local_training_file)
+
+    print(f" --> Downloaded the training file '{training_file}'")
 
     return local_training_file
 
@@ -49,8 +66,6 @@ def download_config_file(prompt_file, cache_dir):
     config_file = f"{cache_dir}/generate.yaml"
     remote_prompt_file = f"{text_bucket}/prompts/{prompt_file}"
 
-    print(f" --> Downloading config from '{remote_prompt_file}'")
-
     # download and parse the config file
     download_file(remote_prompt_file, config_file)
 
@@ -59,6 +74,8 @@ def download_config_file(prompt_file, cache_dir):
             config = yaml.safe_load(cf)
         except yaml.YAMLError as exc:
             pass
+
+    print(f" --> Downloaded config from '{remote_prompt_file}'")
 
     return config
 
@@ -275,7 +292,7 @@ def generate(args):
 
             # count and maybe reset TF?
             n = n + 1
-            if n % 3 == 0:
+            if n % purge_freq == 0:
                 sess = gpt2.reset_session(sess)
                 gpt2.load_gpt2(sess, checkpoint_dir=checkpoint_location)
 
