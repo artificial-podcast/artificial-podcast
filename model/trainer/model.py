@@ -28,7 +28,7 @@ training_save_every = 500
 training_sample_length = 50
 
 PROMPT_LENGTH = 12
-MIN_SEQUENCE_LENGTH = 100
+MIN_SEQUENCE_LENGTH = 150
 
 
 def download_training_file(training_file, dest):
