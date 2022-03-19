@@ -24,7 +24,7 @@ gcloud ai-platform jobs submit training $JOB_ID \
     --runtime-version '2.8' \
     --packages $PACKAGE_PATH \
     --module-name 'trainer.train' \
-    --config bin/cloud_infra.yaml \
+    --config bin/cloud_train_infra.yaml \
     -- \
     --model $MODEL \
     --training-file $TRAINING_FILE \
