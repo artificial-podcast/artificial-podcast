@@ -71,15 +71,17 @@ def download_config_file(prompt_file, cache_dir):
 
     if prompt_file.find('http') != 1:
         # download the config file from the provided URL
-        
+        remote_prompt_file = prompt_file # because print statement !
+
         # make sure path to config_file exists
         path = os.path.dirname(config_file)
         if not os.path.isdir(path):
             os.makedirs(path)
         
-        data = requests.get(prompt_file)
+        data = requests.get(remote_prompt_file)
         with open(config_file, 'w') as f:
             f.write(data.text)
+
     else:
         # download the config file from a bucket
         remote_prompt_file = f"{text_bucket}/prompts/{prompt_file}"
