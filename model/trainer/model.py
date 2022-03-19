@@ -42,11 +42,17 @@ if psutil.virtual_memory().total / (1024*1024) > 16384:
     purge_interval = 3
 
 
-def download_training_file(training_file, dest):
-    local_training_file = os.path.join(dest, training_file_name)
+def download_training_file(training_file, cache_dir):
+    local_training_file = os.path.join(cache_dir, training_file_name)
 
     if training_file.find('http') != -1:
         # download the training file from the provided URL
+
+        # make sure path to local_training_file exists
+        path = os.path.dirname(local_training_file)
+        if not os.path.isdir(path):
+            os.makedirs(path)
+
         data = requests.get(training_file)
         with open(local_training_file, 'w') as f:
             f.write(data.text)
@@ -56,7 +62,6 @@ def download_training_file(training_file, dest):
         download_file(remote_training_file, local_training_file)
 
     print(f" --> Downloaded training file '{training_file}'")
-
     return local_training_file
 
 
@@ -66,6 +71,12 @@ def download_config_file(prompt_file, cache_dir):
 
     if prompt_file.find('http') != 1:
         # download the config file from the provided URL
+        
+        # make sure path to config_file exists
+        path = os.path.dirname(config_file)
+        if not os.path.isdir(path):
+            os.makedirs(path)
+        
         data = requests.get(prompt_file)
         with open(config_file, 'w') as f:
             f.write(data.text)
@@ -81,7 +92,6 @@ def download_config_file(prompt_file, cache_dir):
             pass
 
     print(f" --> Downloaded config from '{remote_prompt_file}'")
-
     return config
 
 
