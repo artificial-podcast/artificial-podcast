@@ -37,9 +37,9 @@ PROMPT_LENGTH = 12
 MIN_SEQUENCE_LENGTH = 150
 
 # free TF every 2 or 3 runs depending on how much memory is available
-purge_freq = 2
+purge_interval = 1
 if psutil.virtual_memory().total / (1024*1024) > 16384:
-    purge_freq = 3
+    purge_interval = 3
 
 
 def download_training_file(training_file, dest):
@@ -55,19 +55,24 @@ def download_training_file(training_file, dest):
         remote_training_file = f"{model_bucket}/datasets/{training_file}"
         download_file(remote_training_file, local_training_file)
 
-    print(f" --> Downloaded the training file '{training_file}'")
+    print(f" --> Downloaded training file '{training_file}'")
 
     return local_training_file
 
 
 def download_config_file(prompt_file, cache_dir):
     config = {}
-
     config_file = f"{cache_dir}/generate.yaml"
-    remote_prompt_file = f"{text_bucket}/prompts/{prompt_file}"
 
-    # download and parse the config file
-    download_file(remote_prompt_file, config_file)
+    if prompt_file.find('http') != 1:
+        # download the config file from the provided URL
+        data = requests.get(prompt_file)
+        with open(config_file, 'w') as f:
+            f.write(data.text)
+    else:
+        # download the config file from a bucket
+        remote_prompt_file = f"{text_bucket}/prompts/{prompt_file}"
+        download_file(remote_prompt_file, config_file)
 
     with open(config_file, 'r') as cf:
         try:
@@ -292,7 +297,7 @@ def generate(args):
 
             # count and maybe reset TF?
             n = n + 1
-            if n % purge_freq == 0:
+            if n % purge_interval == 0:
                 sess = gpt2.reset_session(sess)
                 gpt2.load_gpt2(sess, checkpoint_dir=checkpoint_location)
 
