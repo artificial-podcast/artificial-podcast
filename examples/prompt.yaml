@@ -1,0 +1,18 @@
+namespace: test1  # a sub-folder or namespace for the generated texts
+model:
+  name: "test_model"  # the pre-trained model used to generate the texts with
+  version: 1          # the version to generate from
+
+generate:
+  texts: 1          # number of texts to generate per prompt
+  words: 500        # number of words per text to generate
+  temperature: 0.75 # the 'model temperature', controlls how eratic the text will be.
+
+metadata:
+  labels: 'label1 label2 label3' # some tags describing the content
+
+# prompts that start the text generation
+prompts: |
+  This is the first prompt
+
+  And this is the second prompt
