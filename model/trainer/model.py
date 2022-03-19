@@ -107,7 +107,7 @@ def clean_text(txt):
     step2 = step1.replace('" "', '"\n\n"').replace('""', '"\n\n"')
     step2 = step2.replace('"."', '"\n\n"').replace(
         '. "', '.\n\n"')
-    step2 = step2.replace('@ @', '\n\n')
+    step2 = step2.replace('@@', '\n')
 
     # step 3: remove unwanted chars
     final = step2.replace('…', '... ').replace('�', '')
@@ -119,17 +119,24 @@ def clean_text(txt):
     return final[:last+1]
 
 
-def generate_text(tf_sess, checkpoint_location, initial_prompt, temperature, min_words, seq_length, prompt_length):
+def generate_text(tf_sess, checkpoint_location, initial_prompt, temperature, num_words, seq_length, prompt_length):
 
     def generate_sequence(sess, checkpoint_location, prompt, temperature, seq_length):
-        tokens = gpt2.generate(
-            sess, checkpoint_dir=checkpoint_location,
-            prefix=prompt,
-            length=seq_length,
-            return_as_list=True,
-            include_prefix=False)
+        tokens = None
+        if prompt == 'RANDOM':
+            tokens = gpt2.generate(
+                sess, checkpoint_dir=checkpoint_location,
+                length=seq_length,
+                return_as_list=True)
+        else:
+            tokens = gpt2.generate(
+                sess, checkpoint_dir=checkpoint_location,
+                prefix=prompt,
+                length=seq_length,
+                return_as_list=True,
+                include_prefix=False)
 
-        gen = tokens[0].replace('\n', ' @ ')
+        gen = tokens[0].replace('\n', '@@')
         return gen.split()
 
     i = 1
@@ -146,7 +153,7 @@ def generate_text(tf_sess, checkpoint_location, initial_prompt, temperature, min
             txt = txt_generated
             repeat = False
 
-    while len(txt) < min_words:
+    while len(txt) < num_words:
         n = len(txt_generated) - prompt_length
         tokens = txt_generated[n:]
         prompt = ' '.join(tokens)
@@ -164,14 +171,15 @@ def generate_text(tf_sess, checkpoint_location, initial_prompt, temperature, min
                 repeat = False
 
             repeat_count = repeat_count + 1
-        
-        print(f" --> Iteration {i}: R={repeat_count}, W={len(txt)}, P='{prompt}'")
+
+        print(
+            f" --> Iteration {i}: R={repeat_count}, W={len(txt)}, P='{prompt}'")
         i += 1
 
     return txt
 
 
-def generate_text_file(tf_sess, job_id, namespace, model_name, prompt, labels, temperature=0.75, min_words=500, texts_to_generate=1, checkpoint_location=checkpoint_dir, working_dir='.'):
+def generate_text_file(tf_sess, job_id, namespace, model_name, prompt, labels, temperature=0.75, num_words=500, texts_to_generate=1, checkpoint_location=checkpoint_dir, working_dir='.'):
     i = 0
 
     while i < texts_to_generate:
@@ -185,7 +193,7 @@ def generate_text_file(tf_sess, job_id, namespace, model_name, prompt, labels, t
 
         # generate the text
         gen_txt = generate_text(
-            tf_sess, checkpoint_location, prompt, temperature, min_words, MIN_SEQUENCE_LENGTH, PROMPT_LENGTH)
+            tf_sess, checkpoint_location, prompt, temperature, num_words, MIN_SEQUENCE_LENGTH, PROMPT_LENGTH)
         joint_txt = " ".join(gen_txt)
 
         # open the file and create the frontmatter
@@ -244,9 +252,15 @@ def generate(args):
     print(f" --> Prompts: {config}")
 
     # download model
-    download_model(model_name, args.cache_dir, checkpoint_location, model_version)
+    download_model(model_name, args.cache_dir,
+                   checkpoint_location, model_version)
 
-    # generate texts
+    # load the model
+    sess = gpt2.start_tf_sess()
+    gpt2.load_gpt2(sess, checkpoint_dir=checkpoint_location)
+
+    # start generating texts
+    n = 0
     print(f" --> Generating texts")
 
     prompts = config['prompts'].split("\n")
@@ -255,11 +269,18 @@ def generate(args):
             # generate the text
             prompt = p.strip()
 
-            generate_single_text(args.id, namespace, model_name,
-                                 prompt, labels,
-                                 temperature=temperature, num_words=num_words, texts_to_generate=texts_to_generate,
-                                 checkpoint_location=checkpoint_location, checkpoint_label=checkpoint_latest,
-                                 temp_location=args.cache_dir)
+            # generate the text
+            generate_text_file(sess, args.id, namespace, model_name, prompt, labels, temperature=temperature, num_words=num_words,
+                               texts_to_generate=texts_to_generate, checkpoint_location=checkpoint_location, working_dir=args.cache_dir)
+
+            # count and maybe reset TF?
+            n = n + 1
+            if n % 3 == 0:
+                sess = gpt2.reset_session(sess)
+                gpt2.load_gpt2(sess, checkpoint_dir=checkpoint_location)
+
+    # reset tf in order to avoid OOMs
+    gpt2.reset_session(sess)
 
 
 def training(args):
