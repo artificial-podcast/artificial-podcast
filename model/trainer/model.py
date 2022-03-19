@@ -63,8 +63,23 @@ def download_config_file(prompt_file, cache_dir):
     return config
 
 
-def upload_model(model, cache_dir, checkpoint_dir):
-    remote_base_dir = f"{model_bucket}/models/{model}"
+def download_model(model, cache_dir, checkpoint_dir, version=1):
+    remote_base_dir = f"{model_bucket}/models/{model}/v{version}"
+
+    print(f" --> Downloading model from '{remote_base_dir}'")
+
+    # model checkpoints
+    local_checkpoint_location = f"{checkpoint_dir}/{run_name}"
+    remote_checkpoint_location = f"{remote_base_dir}/{model_prefix}"
+    # sync_prefix needs a trailing / !!!
+    sync_prefix = f"models/{model}/v{version}/{model_prefix}/"
+
+    sync_from_remote(remote_checkpoint_location,
+                     local_checkpoint_location, sync_prefix)
+
+
+def upload_model(model, cache_dir, checkpoint_dir, version=1):
+    remote_base_dir = f"{model_bucket}/models/{model}/v{version}"
 
     print(f" --> Uploading training assets to '{remote_base_dir}'")
 
@@ -77,24 +92,10 @@ def upload_model(model, cache_dir, checkpoint_dir):
     # model checkpoints
     local_checkpoint_location = f"{checkpoint_dir}/{run_name}"
     remote_checkpoint_location = f"{remote_base_dir}/{model_prefix}"
-    sync_prefix = f"models/{model}/{model_prefix}"
+    sync_prefix = f"models/{model}/v{version}/{model_prefix}"
 
     sync_from_local(local_checkpoint_location,
                     remote_checkpoint_location, sync_prefix, True)
-
-
-def download_model(model, cache_dir, checkpoint_dir):
-    remote_base_dir = f"{model_bucket}/models/{model}"
-
-    print(f" --> Downloading model from '{remote_base_dir}'")
-
-    # model checkpoints
-    local_checkpoint_location = f"{checkpoint_dir}/{run_name}"
-    remote_checkpoint_location = f"{remote_base_dir}/{model_prefix}"
-    sync_prefix = f"models/{model}/{model_prefix}/"
-
-    sync_from_remote(remote_checkpoint_location,
-                     local_checkpoint_location, sync_prefix)
 
 
 def clean_text(txt):
@@ -104,7 +105,8 @@ def clean_text(txt):
 
     # step 2: break-up continous text into paragraphs
     step2 = step1.replace('" "', '"\n\n"').replace('""', '"\n\n"')
-    step2 = step2.replace('"."', '"\n\n"').replace('. "', '.\n\n"') #.replace('."', '.\n\n"')
+    step2 = step2.replace('"."', '"\n\n"').replace(
+        '. "', '.\n\n"')
     step2 = step2.replace('@ @', '\n\n')
 
     # step 3: remove unwanted chars
@@ -229,7 +231,8 @@ def generate(args):
 
     # extract config params
     namespace = config['namespace'].strip()
-    model_name = config['model'].strip()
+    model_name = config['model']['name'].strip()
+    model_version = config['model']['version']
     texts_to_generate = config['generate']['texts']
     temperature = config['generate']['temperature']
     num_words = config['generate']['words']
@@ -238,7 +241,7 @@ def generate(args):
     print(f" --> Prompts: {config}")
 
     # download model
-    download_model(model_name, args.cache_dir, checkpoint_location)
+    download_model(model_name, args.cache_dir, checkpoint_location, model_version)
 
     # generate texts
     print(f" --> Generating texts")
@@ -276,7 +279,8 @@ def training(args):
     # import checkpoints to continue training from there
     if args.checkpoints == True:
         checkpoint_location = os.path.join(args.cache_dir, checkpoint_dir)
-        download_model(args.model, args.cache_dir, checkpoint_location)
+        download_model(args.model, args.cache_dir,
+                       checkpoint_location, args.version)
         checkpoint_label = checkpoint_latest
 
     # training
@@ -295,4 +299,8 @@ def training(args):
                   overwrite=overwrite_checkpoints)
 
     # upload the model
-    upload_model(args.model, args.cache_dir, checkpoint_location)
+    version = args.version
+    if args.upgrade == True:
+        version = version + 1
+
+    upload_model(args.model, args.cache_dir, checkpoint_location, version)

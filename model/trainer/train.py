@@ -4,7 +4,6 @@ import os
 import sys
 import logging
 import argparse
-
 from .model import training
 
 # https://stackoverflow.com/questions/35911252/disable-tensorflow-debugging-information
@@ -12,7 +11,7 @@ from .model import training
 # 1 = INFO messages are not printed
 # 2 = INFO and WARNING messages are not printed
 # 3 = INFO, WARNING, and ERROR messages are not printed
-#os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 
 
 def setup():
@@ -24,7 +23,7 @@ def setup():
         '--cache-dir',
         default='cache'
     )
-    
+
     # job
     parser.add_argument(
         '--id',         # a unique id for the job
@@ -40,8 +39,6 @@ def setup():
         '--gpt2',       # 124M, 355M
         default='124M'
     )
-
-    # training
     parser.add_argument(
         '--training-file',  # the file to train the model with
         required=True
@@ -51,7 +48,17 @@ def setup():
         required=True
     )
     parser.add_argument(
-        '--checkpoints', # set to true to continue training
+        '--version',  # version -> v1
+        type=int,
+        default=1
+    )
+    parser.add_argument(
+        '--upgrade',  # increase the version number after the training
+        type=bool,
+        default=False
+    )
+    parser.add_argument(
+        '--checkpoints',  # set to true to continue training
         type=bool,
         default=True
     )
@@ -65,7 +72,6 @@ def setup():
         type=int,
         default=1
     )
-    
 
     return parser.parse_args()
 

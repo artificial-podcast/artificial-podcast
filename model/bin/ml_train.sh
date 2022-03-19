@@ -31,4 +31,6 @@ gcloud ai-platform jobs submit training $JOB_ID \
     --num-steps $STEPS \
     --id $DATE \
     --batch-size 1 \
-    --checkpoints True
+    --checkpoints True \
+    --version 1 \
+    --upgrade False
