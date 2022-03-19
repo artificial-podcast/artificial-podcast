@@ -1,4 +1,5 @@
 import os
+import time
 from google.cloud import storage
 
 
@@ -47,6 +48,24 @@ def source_from_url(url):
     return SEP.join(p[3:])
 
 
+def upload_with_retry(blob, local_path, retries=3):
+    success = False
+    retry = 0
+
+    while success == False:
+        try:
+            blob.upload_from_filename(local_path)
+            success = True
+        except:
+            retry = retry + 1
+            if retry == retries:
+                sys.exit(0)
+
+            time.sleep(retry*retry)  # backoff a bit 1,4,9 seconds ...
+            print(f"Re-try upload of '{local_path}'. ({retry}/{retries})")
+            pass
+
+
 def download_file(source, target):
     bucket_name = bucket_from_url(source)
     blob_name = source_from_url(source)
@@ -69,7 +88,8 @@ def upload_file(source, target):
     # upload the file
     bucket = storage_client.bucket(bucket_name)
     blob = bucket.blob(blob_name)
-    blob.upload_from_filename(source)
+    # blob.upload_from_filename(source)
+    upload_with_retry(blob, source)
 
 
 def remote_inventory(remote, prefix):
@@ -121,19 +141,7 @@ def sync_from_local(local, remote, prefix, sync=False):
                         None
 
                 blob = bucket.blob(remote_path)
-
-                success = False
-                retry = 0
-                while success == False:
-                    try:
-                        blob.upload_from_filename(local_path)
-                        success = True
-                    except:
-                        retry = retry + 1
-                        if retry > 3:
-                            sys.exit(0)
-                        print(f"Re-try upload of '{local_path}'. ({retry}/3)")
-                        pass
+                upload_with_retry(blob, local_path)
 
     if sync:
         for f in inventory:

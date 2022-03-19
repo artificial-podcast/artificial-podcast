@@ -135,7 +135,7 @@ def generate_text(tf_sess, checkpoint_location, initial_prompt, temperature, min
     i = 1
     MIN_WORDS_GEN = 3 * prompt_length
 
-    print(f"Iteration {i}")
+    print(f" --> Initial prompt: '{initial_prompt}'")
 
     repeat = True
     while repeat:
@@ -147,14 +147,12 @@ def generate_text(tf_sess, checkpoint_location, initial_prompt, temperature, min
             repeat = False
 
     while len(txt) < min_words:
-        i += 1
         n = len(txt_generated) - prompt_length
         tokens = txt_generated[n:]
         prompt = ' '.join(tokens)
 
-        print(f"Iteration {i}. Word count={len(txt)}. Prompt={prompt}")
-
         repeat = True
+        repeat_count = 0
         while repeat:
             txt_generated = generate_sequence(
                 tf_sess, checkpoint_location, prompt, temperature, seq_length)
@@ -164,6 +162,11 @@ def generate_text(tf_sess, checkpoint_location, initial_prompt, temperature, min
             if len(txt2) > MIN_WORDS_GEN:
                 txt = txt + txt2
                 repeat = False
+
+            repeat_count = repeat_count + 1
+        
+        print(f" --> Iteration {i}: R={repeat_count}, W={len(txt)}, P='{prompt}'")
+        i += 1
 
     return txt
 
