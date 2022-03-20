@@ -36,3 +36,4 @@ pip install tensorflow-metal
 
 * https://huggingface.co/docs/transformers/model_doc/gpt2
 * https://cloud.google.com/ai-platform/training/docs
+* https://docs.aws.amazon.com/polly/latest/dg/supportedtags.html

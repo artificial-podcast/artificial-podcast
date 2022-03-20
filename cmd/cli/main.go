@@ -55,6 +55,8 @@ func cmdCreateSSML(c *cli.Context) error {
 		return nil
 	}
 
+	verbose := boolFlag(c, "verbose") // --verbose -v
+
 	src := c.Args().First()
 	dest := ""
 	if c.NArg() > 1 {
@@ -65,7 +67,7 @@ func cmdCreateSSML(c *cli.Context) error {
 		dest = filepath.Join(filepath.Dir(src), fmt.Sprintf("%s.ssml", parts[0]))
 	}
 
-	err := texts.MarkupText(src, dest)
+	err := texts.MarkupText(src, dest, verbose)
 	if err != nil {
 		printError(c, err)
 	}
@@ -113,6 +115,7 @@ func setupCommands() []*cli.Command {
 			Usage:     "Create SSML from markup text",
 			UsageText: "ssml SRC [DEST]",
 			Action:    cmdCreateSSML,
+			Flags:     ssmlFlags(),
 		},
 		{
 			Name:      "audio",
@@ -123,6 +126,18 @@ func setupCommands() []*cli.Command {
 		},
 	}
 	return c
+}
+
+func ssmlFlags() []cli.Flag {
+	f := []cli.Flag{
+		&cli.BoolFlag{
+			Name:    "verbose",
+			Usage:   "Print ssml to console",
+			Aliases: []string{"v"},
+			Value:   false,
+		},
+	}
+	return f
 }
 
 func audioFlags() []cli.Flag {

@@ -17,20 +17,7 @@ type (
 	}
 )
 
-func (m *Markup) Push(tag string, dst *strings.Builder) {
-	m.tags = m.tags.Push(tag, dst)
-}
-
-func (m *Markup) PushWithClosingTag(tag, close string, dst *strings.Builder) {
-	m.tags = m.tags.PushWithClosingTag(tag, close, dst)
-}
-
-func (m *Markup) Pop(dst *strings.Builder) {
-	m.tags = m.
-		tags.Pop(dst)
-}
-
-func MarkupText(source, output string) error {
+func MarkupText(source, output string, verbose bool) error {
 	src, err := os.Open(source)
 	if err != nil {
 		return err
@@ -44,7 +31,7 @@ func MarkupText(source, output string) error {
 		tags: make(TagStack, 0),
 	}
 
-	err = markup.ToSSML(scanner, &builder)
+	err = markup.ToSSML(scanner, &builder, verbose)
 	if err != nil {
 		return err
 	}
@@ -65,9 +52,23 @@ func MarkupText(source, output string) error {
 	return err
 }
 
-func (m *Markup) ToSSML(src *bufio.Scanner, ssml *strings.Builder) error {
+func (m *Markup) Push(tag string, dst *strings.Builder) {
+	m.tags = m.tags.Push(tag, dst)
+}
+
+func (m *Markup) PushWithClosingTag(tag, close string, dst *strings.Builder) {
+	m.tags = m.tags.PushWithClosingTag(tag, close, dst)
+}
+
+func (m *Markup) Pop(dst *strings.Builder) {
+	m.tags = m.
+		tags.Pop(dst)
+}
+
+func (m *Markup) ToSSML(src *bufio.Scanner, ssml *strings.Builder, verbose bool) error {
 	narrator := false
 	paragraph := false
+	frontmatter := false
 
 	// wrap the whole text in <speak></speak>
 	m.Push("speak", ssml)
@@ -82,6 +83,22 @@ func (m *Markup) ToSSML(src *bufio.Scanner, ssml *strings.Builder) error {
 
 		// check for markdown headlines
 		if isHeadline(line, ssml) {
+			continue
+		}
+
+		// check for --- / frontmatter
+		if strings.HasPrefix(line, "---") {
+			frontmatter = true
+			for src.Scan() {
+				_line := src.Text()
+				if strings.HasPrefix(_line, "---") {
+					frontmatter = false
+					break // done with the frontmatter
+				}
+			}
+			if frontmatter {
+				return fmt.Errorf("malformed frontmatter")
+			}
 			continue
 		}
 
@@ -105,11 +122,11 @@ func (m *Markup) ToSSML(src *bufio.Scanner, ssml *strings.Builder) error {
 		lines = scan(src, &p)
 
 		if lines == 1 && !paragraph {
-			if err := m.sentence(&p, ssml); err != nil {
+			if err := m.sentence(&p, ssml, verbose); err != nil {
 				return err
 			}
 		} else {
-			if err := m.paragraph(&p, narrator, ssml); err != nil {
+			if err := m.paragraph(&p, narrator, ssml, verbose); err != nil {
 				return err
 			}
 		}
@@ -125,7 +142,7 @@ func (m *Markup) ToSSML(src *bufio.Scanner, ssml *strings.Builder) error {
 	return nil
 }
 
-func (m *Markup) paragraph(para *strings.Builder, narrator bool, ssml *strings.Builder) error {
+func (m *Markup) paragraph(para *strings.Builder, narrator bool, ssml *strings.Builder, verbose bool) error {
 	doc, err := prose.NewDocument(para.String(), prose.WithExtraction(false))
 	if err != nil {
 		return err
@@ -143,17 +160,19 @@ func (m *Markup) paragraph(para *strings.Builder, narrator bool, ssml *strings.B
 	}()
 
 	for _, sent := range doc.Sentences() {
-		nl := escapeLine(cleanupLine(sent.Text))
+		nl := annotateText(escapeLine(cleanupLine(sent.Text)))
 		ssml.WriteString(nl + "\n")
 
-		fmt.Println(nl)
-		fmt.Println("")
+		if verbose {
+			fmt.Println(nl)
+			fmt.Println("")
+		}
 	}
 
 	return nil
 }
 
-func (m *Markup) sentence(para *strings.Builder, ssml *strings.Builder) error {
+func (m *Markup) sentence(para *strings.Builder, ssml *strings.Builder, verbose bool) error {
 	doc, err := prose.NewDocument(para.String(), prose.WithExtraction(false))
 	if err != nil {
 		return err
@@ -166,11 +185,13 @@ func (m *Markup) sentence(para *strings.Builder, ssml *strings.Builder) error {
 	}()
 
 	for _, sent := range doc.Sentences() {
-		nl := escapeLine(cleanupLine(sent.Text))
+		nl := annotateText(escapeLine(cleanupLine(sent.Text)))
 		ssml.WriteString(nl + "\n")
 
-		fmt.Println(nl)
-		fmt.Println("")
+		if verbose {
+			fmt.Println(nl)
+			fmt.Println("")
+		}
 	}
 
 	return nil
@@ -234,6 +255,13 @@ func escapeLine(txt string) string {
 	l = strings.ReplaceAll(l, "'", "&apos;")
 	l = strings.ReplaceAll(l, "<", "&lt;")
 	l = strings.ReplaceAll(l, ">", "&gt;")
+
+	return l
+}
+
+func annotateText(txt string) string {
+	l := strings.ReplaceAll(txt, ", ", "<break strength=\"weak\"/>")
+	l = strings.ReplaceAll(l, ".", "<break strength=\"medium\"/>")
 
 	return l
 }
