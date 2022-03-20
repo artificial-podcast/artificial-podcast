@@ -15,7 +15,7 @@ source env/bin/activate
 deactivate
 ```
 
-#### Tensorflow on a M1 Mac
+#### Install Tensorflow on a M1 Mac
 
 ```shell
 brew install hdf5
