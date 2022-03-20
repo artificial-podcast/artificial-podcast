@@ -21,7 +21,7 @@ func SynthesizeSSML(ctx context.Context, source, output string, voice Voice, rem
 
 	out, err := os.Create(output)
 	if err != nil {
-		return nil
+		return err
 	}
 	defer out.Close()
 

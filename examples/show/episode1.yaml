@@ -1,0 +1,28 @@
+apiVersion: v1
+kind: episode
+metadata:
+  name: episode1
+  guid: 70144508b9a7
+  parent: 322a4a96a64c
+  date: Sun, 20 Mar 2022 19:42:54 +0000
+  labels:
+    block: "no"
+    episode: "1"
+    explicit: "no"
+    season: "1"
+    type: Full
+description:
+  title: EPISODE TITLE
+  summary: EPISODE SUMMARY
+  episodeText: "\nWithout a wand, without a family he can reliably count on not being recognized, and without his own parents helping him, which isn’t a stretch.\"I’m sorry, I can’t even help you,\" he murmurs, brushing his hair back from his forehead.\"You’re a boy, Harry.\"\n\n\"I was speaking to him about the idea of having a child, you’re a man.\"\n\n\"I thought he was going to marry you, but I mean, he is a man, and it’s perfect.\" She stood up and smiled, the blonde still grinning at him. He was still standing, but her smile was so uptight. He smiled back and said, \"I’ll take care of you.\" She came over and held her hand out to him.\"You’re welcome, love.\"\n\n\"I’m sure it’ll be better than you he said softly, keeping his voice low.\n\n\"I’d like to see you again, too.\"\n\n\"Is that why I asked you to get out of here? Let me see you, then.\"\n\n\"I haven’t seen you in a while, sweetheart.\"\n\n\"It’s not like it’s been since I saw you again.\"\n\n\"Well, I’ll see you at the Manor.\"She laughed lightly.\n\n\"I’ll see you in the dorm, then.\" \n\n Draco had promised his mother that he’d be back in a couple of days, and this afternoon had been a bit of a waiting game.\"I’ll be back again a bit later,\" he said, resting his chin on the table.\n\n\"We’ll see you in the library.\"The three of them were silent for a moment before Draco set his hands on the table. Then he turned to face her, \"I’ll see you at the library.\"Hermione turned to look at him with a slight smirk.\n\n\"You haven’t forgotten how important it is that you meet with the headmaster,\" she said, \"and soon.\"Draco felt his face heat.\n\n\"I’m so proud of you, Draco.\"He smiled.\n\n\"No, I’m not.\"\n\n\"I heard you were doing some work here in the Manor when I saw you. You were very nice to me.\"\n\n\"I did,\" Draco said, his voice more subdued.\n\n\"I heard you like to smoke.\"Draco’s face was beginning to darken as he took a deep breath. He started to pace. The clanging of pots and pans and the muffled noise of the kitchen cabinets. His breathing was erratic, his eyes were dry, and his hands were scurrying up and down his side. At the end of the dining room table, a young man had been sitting with a tray of meat and potatoes. She did not know the man, but he was the only person in the room. He was tall, with a thick, thick beard. His features were bright, but his face was still unrecognizable. He was still growing, but the torture that had once been inflicted on him had gone. His magic, though, was strong, and he was no longer afraid of the pain. \n\n Ron looked up at it.\n\n\"How do I know you're still alive?\" \n\n \"I’m not sure,\" he said, voice thick with emotion.\n\n\"I know you’re a part of the Dark Lord’s army.\n"
+  link:
+    uri: https://podops.dev/magic-sheep/episode1
+    rel: external
+  duration: 1
+image:
+  uri: episode.png
+  rel: local
+enclosure:
+  uri: assets/episode1.mp3
+  rel: local
+  type: audio/mpeg

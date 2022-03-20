@@ -4,4 +4,5 @@ TARGET_LINUX = GOARCH=amd64 GOOS=linux
 cli:
 	cd cmd/cli && go build -o ap main.go && mv ap ${GOPATH}/bin/ap
 	cd cmd/crawler && go build -o apc main.go && mv apc ${GOPATH}/bin/apc
+	cd cmd/release && go build -o ape main.go && mv ape ${GOPATH}/bin/ape
 

@@ -17,8 +17,6 @@ import (
 const (
 	minLineLength = 20
 
-	//startToken   = "<|startoftext|>"
-	//endToken     = "<|endoftext|>"
 	startToken   = ""
 	endToken     = "\n"
 	newLineToken = "<|lf|>"
@@ -158,6 +156,7 @@ func process(id, path string) error {
 	return nil
 }
 
+// apc [input.txt | story ID] output_dir
 func main() {
 	if len(os.Args) != 3 {
 		log.Fatal(fmt.Errorf("invalid arguments"))
