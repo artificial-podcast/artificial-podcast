@@ -82,17 +82,26 @@ func main() {
 	episodeFilePath := filepath.Join(workingDir, episodeFileName)
 
 	episodeDoc := podops.DefaultEpisode(episodeName, show.Metadata.Name, createRandomAssetGUID(), parentGUID, cfg.GetOption(config.PodopsServiceEndpointEnv), cfg.GetOption(config.PodopsContentEndpointEnv))
+	episodeDoc.Description.Title = fmt.Sprintf("Episode %d", episode)
 	episodeDoc.Enclosure.URI = audioFilePath
 	episodeDoc.Metadata.Labels[podops.LabelEpisode] = fmt.Sprintf("%d", episode)
+	episodeDoc.Metadata.Labels[podops.LabelExplicit] = "yes"
 
 	// load the generated text
 	txt, err := loadGeneratedText(sourceFilePath)
 	if err != nil {
 		log.Fatal(err)
 	}
+	// generate a summary if possible
+	summary := fmt.Sprintf("Episode %d", episode)
+	pos := strings.Index(txt, ".")
+	if pos != -1 {
+		summary = txt[:pos]
+	}
+	episodeDoc.Description.Summary = summary
 	episodeDoc.Description.EpisodeText = txt
-	dumpResource(episodeFilePath, episodeDoc)
 
+	dumpResource(episodeFilePath, episodeDoc)
 	fmt.Printf(" --> Created Episode %s\n", episodeFileName)
 }
 
@@ -108,7 +117,7 @@ func loadShowResource(data []byte) (interface{}, string, error) {
 }
 
 func loadGeneratedText(path string) (string, error) {
-	var builder strings.Builder
+	var txtBuilder, frontBuilder strings.Builder
 
 	src, err := os.Open(path)
 	if err != nil {
@@ -129,6 +138,8 @@ func loadGeneratedText(path string) (string, error) {
 				if strings.HasPrefix(_line, "---") {
 					frontmatter = false
 					break // done with the frontmatter
+				} else {
+					frontBuilder.WriteString(line + "\n")
 				}
 			}
 			if frontmatter {
@@ -136,9 +147,9 @@ func loadGeneratedText(path string) (string, error) {
 			}
 			continue
 		}
-		builder.WriteString(line + "\n")
+		txtBuilder.WriteString(line + "\n")
 	}
-	return builder.String(), nil
+	return txtBuilder.String(), nil
 }
 
 func createRandomAssetGUID() string {
@@ -160,8 +171,5 @@ func dumpResource(path string, doc interface{}) error {
 	yamlEncoder.SetIndent(2)
 	yamlEncoder.Encode(doc)
 
-	ioutil.WriteFile(path, b.Bytes(), 0644)
-	//fmt.Printf("\n---\n# %s\n%s\n", path, b.String())
-
-	return nil
+	return ioutil.WriteFile(path, b.Bytes(), 0644)
 }
