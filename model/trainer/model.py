@@ -45,7 +45,7 @@ if psutil.virtual_memory().total / (1024*1024) > 16384:
 def download_training_file(training_file, cache_dir):
     local_training_file = os.path.join(cache_dir, training_file_name)
 
-    if training_file.find('http') != -1:
+    if training_file.find('http') > -1:
         # download the training file from the provided URL
 
         # make sure path to local_training_file exists
@@ -69,7 +69,7 @@ def download_config_file(prompt_file, cache_dir):
     config = {}
     config_file = f"{cache_dir}/generate.yaml"
 
-    if prompt_file.find('http') != 1:
+    if prompt_file.find('http') > -1:
         # download the config file from the provided URL
         remote_prompt_file = prompt_file # because print statement !
 
